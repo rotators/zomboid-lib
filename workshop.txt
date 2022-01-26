@@ -1,0 +1,5 @@
+version=1
+title=RotatorsLib
+description=Yes, there is description.
+tags=Build 41;Framework;Interface
+visibility=
