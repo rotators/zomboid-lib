@@ -1,4 +1,5 @@
 version=1
+id=2732594572
 title=RotatorsLib
 description=[quote]
 description=Requires PZ v41.65+
