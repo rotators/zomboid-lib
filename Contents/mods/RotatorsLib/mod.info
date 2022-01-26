@@ -1,5 +1,12 @@
-name=RotatorsLib
-poster=rotators.png
 id=RotatorsLib
-description=RotatorsLib
+name=RotatorsLib
+description=Rotators, rotate!
+authors=Wipe
+
+modversion=1.0
+versionMin=41.65
+tags=Build 41,Framework
+
+poster=rotators.png
+
 url=https://github.com/rotators/zomboid-lib/
