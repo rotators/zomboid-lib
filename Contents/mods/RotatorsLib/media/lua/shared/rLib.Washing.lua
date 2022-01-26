@@ -24,7 +24,6 @@ function rLib.Washing.GetDirt(player)
 	local bodyDirt, visual = 0, 0, player:getHumanVisual()
 	for i=0, BloodBodyPartType.MAX:index()-1 do
 		local part = BloodBodyPartType.FromIndex(i)
-		bodyBlood = bodyBlood + visual:getBlood(part)
 		bodyDirt = bodyDirt + visual:getDirt(part)
 	end
 
