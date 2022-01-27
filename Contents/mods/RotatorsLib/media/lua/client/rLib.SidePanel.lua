@@ -52,9 +52,9 @@ function rLib.SidePanel.AddButton(texture, onClickTarget, onClickFunc)
 
 	ISEquippedItem.instance:setHeight(ISEquippedItem.instance:getHeight() + buttonH + 5)
 
-	rLib.SidePanel.MoveButton(ISEquippedItem.instance.debugBtn, buttonH)
-	rLib.SidePanel.MoveButton(ISEquippedItem.instance.clientBtn, buttonH)
-	rLib.SidePanel.MoveButton(ISEquippedItem.instance.adminBtn, buttonH)
+	rLib.SidePanel.MoveButton(ISEquippedItem.instance.debugBtn, buttonH + 5)
+	rLib.SidePanel.MoveButton(ISEquippedItem.instance.clientBtn, buttonH + 5)
+	rLib.SidePanel.MoveButton(ISEquippedItem.instance.adminBtn, buttonH + 5)
 
 	ISEquippedItem.instance:addChild(button)
 
@@ -63,7 +63,7 @@ end
 
 function rLib.SidePanel.MoveButton(button, offset)
 	if button then
-		button:setY(button:getY() + 5 + offset)
+		button:setY(button:getY() + offset)
 	end
 end
 
@@ -74,14 +74,13 @@ function rLib.SidePanel.RemoveButton(button, force)
 
 	local buttonH = button:getHeight()
 
-	rLib.SidePanel.MoveButton(ISEquippedItem.instance.debugBtn, -buttonH)
-	rLib.SidePanel.MoveButton(ISEquippedItem.instance.clientBtn, -buttonH)
-	rLib.SidePanel.MoveButton(ISEquippedItem.instance.adminBtn, -buttonH)
+	rLib.SidePanel.MoveButton(ISEquippedItem.instance.debugBtn, -buttonH - 5)
+	rLib.SidePanel.MoveButton(ISEquippedItem.instance.clientBtn, -buttonH - 5)
+	rLib.SidePanel.MoveButton(ISEquippedItem.instance.adminBtn, -buttonH - 5)
 
 	ISEquippedItem.instance:setHeight(ISEquippedItem.instance:getHeight() - buttonH - 5)
 
 	ISEquippedItem.instance:removeChild(button)
-	table.remove(rLib.SidePanel.Buttons, button)
 end
 
 function rLib.SidePanel.RemoveAllButtons()
