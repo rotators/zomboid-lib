@@ -11,9 +11,7 @@ function rLib.dprint(text, ...)
 end
 
 function rLib.print(text, arg, ...)
-	if type(text) ~= "string" then
-		return
-	end
+	assert(type(text) == "string")
 
 	if arg ~= nil then
 		text = string.format(text, arg, ...)
@@ -31,9 +29,8 @@ function rLib.dhalo(player, text, ...)
 end
 
 function rLib.halo(player, text, arg, ...)
-	if not player or type(text) ~= "string" then
-		return
-	end
+	assert(instanceof(player, "IsoPlayer"))
+	assert(type(text) == "string")
 
 	if arg ~= nil then
 		text = string.format(text, arg, ...)
@@ -44,10 +41,27 @@ end
 
 --
 
-function rLib.mod(name)
-	if type(name) ~= "string" then
-		return false
+function rLib.tostring(arg)
+	local result = ""
+
+	if type(arg) == "table" then
+		result = "{"
+		for var,val in pairs(arg) do
+			result = result .. " " .. var .. "=" .. tostring(val)
+			first = false
+		end
+		result = result .. " }"
+	else
+		result = tostring(arg)
 	end
+
+	return result
+end
+
+--
+
+function rLib.mod(name)
+	assert(type(name) == "string")
 
 	return ActiveMods.getById("currentGame"):isModActive(name)
 end
