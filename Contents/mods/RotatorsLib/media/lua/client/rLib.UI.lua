@@ -2,11 +2,18 @@ require "rLib.SidePanel"
 
 rLib.UI = {}
 
+function rLib.UI.UpdateAndCall(func, ...)
+	-- allows to call functions which check radial menu visibility (such as ISVehicleMenu.showRadialMenu()) directly from radial:addSlice(...) --
+	UIManager.update()
+
+	func(...)
+end
+
+-- WIP --
+
 function rLib.UI.Click()
 	rLib.dprint("Click!")
 end
-
---
 
 local R
 
