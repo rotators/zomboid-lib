@@ -8,7 +8,7 @@ function rLib.Commands.SendToServer(player, cmd, args, dbg)
 	assert(type(args) == "table")
 
 	if dbg then
-		rLib.dprint("[rLib.Commands] -> %s : %s }", cmd, rLib.tostring(args))
+		rLib.dprint("[rLib.Commands] -> %s : %s", cmd, rLib.tostring(args))
 		args._dbg_ = true
 	end
 
@@ -28,7 +28,7 @@ function rLib.Commands.OnServerCommand(module, cmd, player, args)
 
 	if args._dbg_ then
 		args._dbg_ = nil
-		rLib.dprint("[rLib.Commands] <- %s %s", cmd, rLib.tostring(args))
+		rLib.dprint("[rLib.Commands] <- %s : %s", cmd, rLib.tostring(args))
 	end
 
 	local func = "Client_" .. cmd
@@ -36,9 +36,9 @@ function rLib.Commands.OnServerCommand(module, cmd, player, args)
 	if rLib.Commands[func] ~= nil then
 		rLib.Commands[func](player, args)
 	else
-		rLib.dprint("[rLib.Commands] Unknown command '%s'", cmd)
+		rLib.dprint("[rLib.Commands] Unknown : " .. cmd)
 
-		assert(rLib)
+		assert(not getDebug())
 	end
 end
 
