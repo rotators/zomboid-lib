@@ -51,6 +51,7 @@ function rLib.Vehicles.Armor.ProcessPart(player, vehicle, part)
 		return false
 	end
 
+	-- in case someone wants to use `table armor` for their own armor implementation --
 	if not armor.logic or (armor.logic ~= "RotatorsLib" and armor.logic ~= "rLib") then
 		return false
 	end
