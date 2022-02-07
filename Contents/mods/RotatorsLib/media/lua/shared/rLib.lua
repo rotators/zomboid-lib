@@ -60,6 +60,26 @@ end
 
 --
 
+function rLib.lua(funcName, ...)
+	assert(type(funcName) == "string")
+
+	local func = _G
+	local sections = funcName:split("\\.")
+	for s=1,#sections do
+		func = func[sections[s]]
+		if type(func) ~= "function" and type(func) ~= "table" then
+			assert(not getDebug(), "[rLib] invalid lua function name : " .. funcName)
+			break
+		end
+	end
+
+	if type(func) == "function" then
+		return func(...)
+	end
+end
+
+--
+
 function rLib.mod(name)
 	assert(type(name) == "string")
 

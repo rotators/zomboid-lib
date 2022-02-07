@@ -1,5 +1,5 @@
 require "rLib.Shared"
 
-require "rLib.Commands.lua"
+require "rLib.Commands"
 
 return rLib
