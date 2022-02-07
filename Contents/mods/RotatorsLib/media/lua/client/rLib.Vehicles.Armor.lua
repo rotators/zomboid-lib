@@ -20,8 +20,6 @@ function rLib.Vehicles.Armor.ProcessCell(player)
 		end
 	end
 
-	rLib.dprint("[rLib.Vehicles.Armor.ProcessCell] %d vehicle%s", vehicles:size(), vehicles:size() ~= 1 and "s" or "")
-
 	return result
 end
 
@@ -99,7 +97,7 @@ function rLib.Vehicles.Armor.ProcessPart(player, vehicle, part)
 			end
 
 			if repair then
-				rLib.dprint("[rLib.Vehicles.Armor.ProcessPart] repair %d:%s : %d -> %d", vehicle:getId(), part:getId(), part:getCondition(), partCondition)
+				--rLib.dprint("[rLib.Vehicles.Armor.ProcessPart] repair %d:%s : %d -> %d", vehicle:getId(), part:getId(), part:getCondition(), partCondition)
 				sendClientCommand(player, "vehicle", "setPartCondition", { vehicle = vehicle:getId(), part = part:getId(), condition = partCondition })
 			end
 
@@ -142,11 +140,3 @@ function rLib.Vehicles.Armor.OnPlayerUpdate(player)
 end
 
 Events.OnPlayerUpdate.Add(rLib.Vehicles.Armor.OnPlayerUpdate)
-
-if getDebug() then
-	Events.OnClientCommand.Add(function(module, cmd, player, args)
-		if module == "vehicle" and cmd == "setPartCondition" then
-			rLib.dprint("[rLib.Vehicles.Armor.OnPlayerUpdate] -> setPartCondition %s", rLib.tostring(args))
-		end
-	end)
-end
