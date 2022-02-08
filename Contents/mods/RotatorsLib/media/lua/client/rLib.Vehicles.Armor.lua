@@ -59,7 +59,7 @@ function rLib.Vehicles.Armor.ProcessPart(player, vehicle, part)
 	local check = part:getInventoryItem()
 
 	if luaTable and armor.lua.check then
-		check = rLib.lua(armor.lua.check, vehicle, part, armor, "check")
+		check = rLib.lua(armor.lua.check, player, vehicle, part, armor, "check")
 	end
 
 	if not check then
@@ -93,7 +93,7 @@ function rLib.Vehicles.Armor.ProcessPart(player, vehicle, part)
 			local repair = true
 
 			if luaTable and armor.lua.repair then
-				repair = rLib.lua(armor.lua.repair, vehicle, part, armor, "repair")
+				repair = rLib.lua(armor.lua.repair, player, vehicle, part, armor, "repair")
 			end
 
 			if repair then
@@ -110,15 +110,15 @@ end
 
 --
 
-function rLib.Vehicles.Armor.Callback.TrueOnEngine(vehicle, part, armor, action)
+function rLib.Vehicles.Armor.Callback.TrueOnEngine(player, vehicle, part, armor, action)
 	return part:getId() == "Engine"
 end
 
-function rLib.Vehicles.Armor.Callback.TrueOnZero(vehicle, part, armor, action)
+function rLib.Vehicles.Armor.Callback.TrueOnZero(player, vehicle, part, armor, action)
 	return part:getCondition() <= 0
 end
 
-function rLib.Vehicles.Armor.Callback.FalseOnZero(vehicle, part, armor, action)
+function rLib.Vehicles.Armor.Callback.FalseOnZero(player, vehicle, part, armor, action)
 	return part:getCondition() > 0
 end
 
