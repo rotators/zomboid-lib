@@ -11,7 +11,7 @@ function rLib.dprint(text, ...)
 end
 
 function rLib.print(text, arg, ...)
-	assert(type(text) == "string")
+	assert(rLib.arg(text, "string"))
 
 	if arg ~= nil then
 		text = string.format(text, arg, ...)
@@ -29,8 +29,8 @@ function rLib.dhalo(player, text, ...)
 end
 
 function rLib.halo(player, text, arg, ...)
-	assert(instanceof(player, "IsoPlayer"))
-	assert(type(text) == "string")
+	assert(rLib.arg(player, "IsoPlayer"))
+	assert(rLib.arg(text, "string"))
 
 	if arg ~= nil then
 		text = string.format(text, arg, ...)
@@ -47,7 +47,7 @@ function rLib.tostring(arg)
 	if type(arg) == "table" then
 		result = "{"
 		for var,val in pairs(arg) do
-			result = result .. " " .. var .. "=" .. tostring(val)
+			result = result .. " " .. var .. "=" .. rLib.tostring(val)
 			first = false
 		end
 		result = result .. " }"
@@ -58,10 +58,12 @@ function rLib.tostring(arg)
 	return result
 end
 
---
+function rLib.arg(obj, typeName)
+	return type(obj) == typeName or instanceof(obj, typeName), "[rLib] Invalid argument : expected " .. typeName
+end
 
 function rLib.lua(funcName, ...)
-	assert(type(funcName) == "string")
+	assert(rLib.arg(funcName, "string"))
 
 	local func = _G
 	local sections = funcName:split("\\.")
@@ -81,9 +83,34 @@ end
 --
 
 function rLib.mod(name)
-	assert(type(name) == "string")
+	assert(rLib.arg(name, "string"))
 
 	return ActiveMods.getById("currentGame"):isModActive(name)
+end
+
+--
+
+function rLib.breakpoint()
+	local coro = getCurrentCoroutine()
+	local func = getCoroutineCallframeStack(coro, 1)
+	local file = getFilenameOfCallframe(func)
+	local line = getLineNumber(func)
+
+	if getDebug() and rLib.Events.Exists("Debugger.BeforeDebugger") then
+		toggleBreakpoint(file, line)
+		rLib.Events.On("Debug.BeforeDebugger", rLib.clearpoint)
+	else
+		rLib.print("[rLib] Breakpoint attempt : %s:%d", file, line)
+	end
+end
+
+function rLib.clearpoint(file, line)
+	if not rLib.Events.Current then
+		return
+	end
+
+	toggleBreakpoint(file, line)
+	rLib.Events.Off("Debug.BeforeDebugger", rLib.clearpoint)
 end
 
 --

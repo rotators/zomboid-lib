@@ -14,7 +14,7 @@ rLib.Vehicles.Functions =
 --
 
 function rLib.Vehicles.Functions.ShowPartItemTypeModel(part)
-	assert(instanceof(part, "VehiclePart"))
+	assert(rLib.arg(part, "VehiclePart"))
 
 	local partItemTypes = part:getItemType()
 	for i=0, partItemTypes:size()-1 do

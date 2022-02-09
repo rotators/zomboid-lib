@@ -3,9 +3,9 @@ require "rLib.Shared"
 rLib.Commands = rLib.Commands or {}
 
 function rLib.Commands.SendToServer(player, cmd, args, dbg)
-	assert(instanceof(player, "IsoPlayer"))
-	assert(type(cmd) == "string")
-	assert(type(args) == "table")
+	assert(rLib.arg(player, "IsoPlayer"))
+	assert(rLib.arg(cmd, "string"))
+	assert(rLib.arg(args, "table"))
 
 	if dbg then
 		rLib.dprint("[rLib.Commands] -> %s : %s", cmd, rLib.tostring(args))
@@ -22,9 +22,9 @@ function rLib.Commands.OnServerCommand(module, cmd, player, args)
 		return
 	end
 
-	assert(type(cmd) == "string")
-	assert(instanceof(player, "IsoPlayer"))
-	assert(type(args) == "table")
+	assert(rLib.arg(cmd, "string"))
+	assert(rLib.arg(player, "IsoPlayer"))
+	assert(rLib.arg(args, "table"))
 
 	if args._dbg_ then
 		args._dbg_ = nil

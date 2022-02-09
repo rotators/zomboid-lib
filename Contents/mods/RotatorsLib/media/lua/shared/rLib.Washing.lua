@@ -3,6 +3,8 @@ require "rLib"
 rLib.Washing = {}
 
 function rLib.Washing.GetBlood(player)
+	assert(rLib.arg(player, "IsoPlayer"))
+
 	if not player then
 		return 0
 	end
@@ -17,6 +19,8 @@ function rLib.Washing.GetBlood(player)
 end
 
 function rLib.Washing.GetDirt(player)
+	assert(rLib.arg(player, "IsoPlayer"))
+
 	if not player then
 		return 0
 	end
@@ -31,6 +35,8 @@ function rLib.Washing.GetDirt(player)
 end
 
 function rLib.Washing.GetBloodAndDirt(player)
+	assert(rLib.arg(player, "IsoPlayer"))
+
 	if not player then
 		return 0
 	end
@@ -46,6 +52,8 @@ function rLib.Washing.GetBloodAndDirt(player)
 end
 
 function rLib.Washing.GetSoapItems(player)
+	assert(rLib.arg(player, "IsoPlayer"))
+
 	local soapList = {}
 
 	function _addItemType(itemType)

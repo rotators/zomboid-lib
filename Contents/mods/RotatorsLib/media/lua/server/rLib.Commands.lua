@@ -3,8 +3,8 @@ require "rLib.Shared"
 rLib.Commands = rLib.Commands or {}
 
 function rLib.Commands.Server_TEST_SetVehicleHeadlights(player, args)
-	assert(type(args.vehicleId) == "number")
-	assert(type(args.set) == "boolean")
+	assert(rLib.arg(args.vehicleId, "number"))
+	assert(rLib.arg(args.set, "boolean"))
 
 	local vehicle = getVehicleById(args.vehicleId)
 	if not vehicle then
@@ -17,8 +17,8 @@ end
 ---
 
 function rLib.Commands.SendToClient(cmd, args, dbg)
-	assert(type(cmd) == "string")
-	assert(type(args) == "table")
+	assert(rLib.arg(cmd, "string"))
+	assert(rLib.arg(args, "table"))
 
 	if type(dbg) == "boolean" and dbg then
 		rLib.dprint("[rLib.Commands] => %s : %s", cmd, rLib.tostring(args))
@@ -35,9 +35,9 @@ function rLib.Commands.OnClientCommand(module, cmd, player, args)
 		return
 	end
 
-	assert(type(cmd) == "string")
-	assert(instanceof(player, "IsoPlayer"))
-	assert(type(args) == "table")
+	assert(rLib.arg(cmd, "string"))
+	assert(rLib.arg(player, "IsoPlayer"))
+	assert(rLib.arg(args, "table"))
 
 	if args._dbg_ then
 		args._dbg_ = nil

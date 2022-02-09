@@ -3,9 +3,7 @@ require "rLib.Shared"
 rLib.ContextMenu = {}
 
 function rLib.ContextMenu.GetSub(context, submenuName)
-	if type(submenuName) ~= "string" then
-		return nil
-	end
+	assert(rLib.arg(submenuName, "string"))
 
 	local var = context:getOptionFromName(submenuName)
 	if not var or not var.subOption then
@@ -22,9 +20,8 @@ function rLib.ContextMenu.GetSub(context, submenuName)
 end
 
 function rLib.ContextMenu.GetSubOption(context, submenuName, optionName)
-	if type(submenuName) ~= "string" or type(optionName) ~= "string" then
-		return nil
-	end
+	assert(rLib.arg(submenuName, "string"))
+	assert(rLib.arg(optionName, "string"))
 
 	local submenu = rLib.ContextMenu.GetSub(context, submenuName)
 	if not submenu then
