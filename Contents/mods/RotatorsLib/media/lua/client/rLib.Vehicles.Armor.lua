@@ -9,7 +9,7 @@ rLib.Vehicles.Armor =
 --
 
 function rLib.Vehicles.Armor.ProcessCell(player)
-	assert(instanceof(player, "IsoPlayer"))
+	assert(rLib.arg(player, "IsoPlayer"))
 
 	local result = false
 
@@ -24,8 +24,8 @@ function rLib.Vehicles.Armor.ProcessCell(player)
 end
 
 function rLib.Vehicles.Armor.ProcessVehicle(player, vehicle)
-	assert(instanceof(player, "IsoPlayer"))
-	assert(instanceof(vehicle, "BaseVehicle"))
+	assert(rLib.arg(player, "IsoPlayer"))
+	assert(rLib.arg(vehicle, "BaseVehicle"))
 
 	local result = false
 
@@ -39,9 +39,9 @@ function rLib.Vehicles.Armor.ProcessVehicle(player, vehicle)
 end
 
 function rLib.Vehicles.Armor.ProcessPart(player, vehicle, part)
-	assert(instanceof(player, "IsoPlayer"))
-	assert(instanceof(vehicle, "BaseVehicle"))
-	assert(instanceof(part, "VehiclePart"))
+	assert(rLib.arg(player, "IsoPlayer"))
+	assert(rLib.arg(vehicle, "BaseVehicle"))
+	assert(rLib.arg(part, "VehiclePart"))
 	assert(vehicle == part:getVehicle())
 
 	local armor = part:getTable("armor")
@@ -111,14 +111,32 @@ end
 --
 
 function rLib.Vehicles.Armor.Callback.TrueOnEngine(player, vehicle, part, armor, action)
+	assert(rLib.arg(player, "IsoPlayer"))
+	assert(rLib.arg(vehicle, "BaseVehicle"))
+	assert(rLib.arg(part, "VehiclePart"))
+	assert(rLib.arg(armor, "table"))
+	assert(rLib.arg(action, "string"))
+
 	return part:getId() == "Engine"
 end
 
 function rLib.Vehicles.Armor.Callback.TrueOnZero(player, vehicle, part, armor, action)
+	assert(rLib.arg(player, "IsoPlayer"))
+	assert(rLib.arg(vehicle, "BaseVehicle"))
+	assert(rLib.arg(part, "VehiclePart"))
+	assert(rLib.arg(armor, "table"))
+	assert(rLib.arg(action, "string"))
+
 	return part:getCondition() <= 0
 end
 
 function rLib.Vehicles.Armor.Callback.FalseOnZero(player, vehicle, part, armor, action)
+	assert(rLib.arg(player, "IsoPlayer"))
+	assert(rLib.arg(vehicle, "BaseVehicle"))
+	assert(rLib.arg(part, "VehiclePart"))
+	assert(rLib.arg(armor, "table"))
+	assert(rLib.arg(action, "string"))
+
 	return part:getCondition() > 0
 end
 

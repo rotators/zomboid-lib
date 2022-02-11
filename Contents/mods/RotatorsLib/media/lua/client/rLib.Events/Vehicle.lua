@@ -1,3 +1,5 @@
+require "rLib.Shared"
+
 local Vanilla =
 {
 	ISAttachTrailerToVehicle =

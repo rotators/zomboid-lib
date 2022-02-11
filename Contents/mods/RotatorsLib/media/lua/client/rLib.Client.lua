@@ -6,6 +6,7 @@ require "rLib.SidePanel"
 require "rLib.UI"
 require "rLib.Vehicles.Armor"
 
+require "rLib.Events/Debug.lua"
 require "rLib.Events/Vehicle.lua"
 
 return rLib
