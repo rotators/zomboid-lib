@@ -1,3 +1,8 @@
+require "Vehicles/ISUI/ISVehicleMechanics"
+require "Vehicles/ISUI/ISVehicleMenu"
+require "Vehicles/TimedActions/ISAttachTrailerToVehicle"
+require "Vehicles/TimedActions/ISDetachTrailerFromVehicle"
+
 require "rLib.Shared"
 
 local Vanilla =
@@ -9,6 +14,10 @@ local Vanilla =
 	ISDetachTrailerFromVehicle =
 	{
 		perform = ISDetachTrailerFromVehicle.perform
+	},
+	ISVehicleMechanics =
+	{
+		setVisible = ISVehicleMechanics.setVisible
 	},
 	ISVehicleMenu =
 	{
@@ -42,6 +51,16 @@ function ISDetachTrailerFromVehicle:perform()
 	Vanilla.ISDetachTrailerFromVehicle.perform(self)
 
 	rLib.Events.Run("Vehicle.DetachVehicle", self.character, self.vehicle, vehicleB)
+end
+
+--[[ISVehicleMechanics.lua v41.65]] rLib.Events.Add("Vehicle.MechanicsSetVisible")
+
+function ISVehicleMechanics:setVisible(visible, ...)
+	Vanilla.ISVehicleMechanics.setVisible(self, visible, ...)
+
+	if instanceof(self.vehicle, "BaseVehicle") then -- skip during player data generation --
+		rLib.Events.Run("Vehicle.MechanicsSetVisible", self, visible)
+	end
 end
 
 --[[ISVehicleMenu v41.65]] rLib.Events.Add("Vehicle.ToggleHeadlights")
