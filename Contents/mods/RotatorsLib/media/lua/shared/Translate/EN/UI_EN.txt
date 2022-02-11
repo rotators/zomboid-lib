@@ -1,0 +1,4 @@
+rLib_EN =
+{
+	UI_rLib_VehicleOverlayEditor = "Vehicle Overlay Editor",
+}
