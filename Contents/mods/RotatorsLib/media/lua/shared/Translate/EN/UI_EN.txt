@@ -1,4 +1,8 @@
 rLib_EN =
 {
-	UI_rLib_VehicleOverlayEditor = "Vehicle Overlay Editor",
+	UI_rLib_VehicleOverlayEditor = "Overlay Editor",
+	UI_rLib_VehicleOverlayEditor_CarAdd = "Add car config"
+	UI_rLib_VehicleOverlayEditor_CarDel = "Remove car config"
+	UI_rLib_VehicleOverlayEditor_PartAdd = "Add part config"
+	UI_rLib_VehicleOverlayEditor_PartDel = "Remove part config"
 }

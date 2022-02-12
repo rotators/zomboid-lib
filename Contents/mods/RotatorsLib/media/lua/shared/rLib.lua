@@ -55,9 +55,10 @@ function rLib.tostring(arg)
 
 	if type(arg) == "table" then
 		result = "{"
+		local comma = ""
 		for var,val in pairs(arg) do
-			result = result .. " " .. var .. "=" .. rLib.tostring(val)
-			first = false
+			result = result .. comma .. " " .. var .. " = " .. rLib.tostring(val)
+			comma = ","
 		end
 		result = result .. " }"
 	else
