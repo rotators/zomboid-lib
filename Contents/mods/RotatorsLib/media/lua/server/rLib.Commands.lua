@@ -2,6 +2,33 @@ require "rLib.Shared"
 
 rLib.Commands = rLib.Commands or {}
 
+function rLib.Commands.Server_SetVehicleBattery(player, args)
+	assert(rLib.arg(args.vehicleId, "number"))
+	assert(rLib.arg(args.battery, "number"))
+
+	local vehicle = getVehicleById(args.vehicleId)
+	if not vehicle then
+		return
+	end
+
+	local partId = "Battery"
+	if rLib.arg(args.partId, "string") then
+		partId = args.partId
+	end
+
+	local part = vehicle:getPartById(partId)
+	if not part then
+		return
+	end
+
+	local inv = part:getInventoryItem()
+	if not inv then
+		return
+	end
+
+	inv:setUsedDelta(args.battery)
+end
+
 function rLib.Commands.Server_SetVehicleHeadlights(player, args)
 	assert(rLib.arg(args.vehicleId, "number"))
 	assert(rLib.arg(args.set, "boolean"))
