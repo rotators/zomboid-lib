@@ -2,7 +2,7 @@ require "rLib.Shared"
 
 rLib.Commands = rLib.Commands or {}
 
-function rLib.Commands.Server_TEST_SetVehicleHeadlights(player, args)
+function rLib.Commands.Server_SetVehicleHeadlights(player, args)
 	assert(rLib.arg(args.vehicleId, "number"))
 	assert(rLib.arg(args.set, "boolean"))
 
