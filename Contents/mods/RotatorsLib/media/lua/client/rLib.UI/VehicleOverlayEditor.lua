@@ -501,7 +501,7 @@ function rLib.UI.VehicleOverlayEditor:OnChangeVehicle(vehicle)
 	self:ShowElements(not valid, not valid, self.uiVehicleAdd)
 	self:ShowElements(valid, valid, self.uiVehicleDel, self.uiVehiclePrefix, self.uiVehicleX, self.uiVehicleY, self.uiGenerate)
 
-	self.SelectedPart = nil
+	self.SelectedPart = "invalidate"
 	self:UpdateSelectedPart()
 end
 
@@ -775,9 +775,9 @@ end
 
 function rLib.UI.VehicleOverlayEditor:OnDisplay(button)
 	local raw = ObjectViewer:new(getCore():getScreenWidth() / 2, 0, 600, 400, ISCarMechanicsOverlay)
-
 	raw:initialise()
 	raw:addToUIManager()
+	raw.objectView.onRightMouseDown = nil
 end
 
 function rLib.UI.VehicleOverlayEditor:OnGenerate(button)
