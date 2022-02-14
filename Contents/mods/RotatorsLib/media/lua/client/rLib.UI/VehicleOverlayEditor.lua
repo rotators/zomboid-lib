@@ -1,17 +1,23 @@
 --[[*]]-- RotatorsLib --[[*]]--
 
-require "Vehicles/ISUI/ISVehicleMechanics.lua"
+require "DebugUIs/ObjectViewer"
+require "ISUI/ISButton"
+require "ISUI/ISLabel"
+require "ISUI/ISModalDialog"
+require "ISUI/ISTextEntryBox"
+require "ISUI/PlayerData/ISPlayerData"
+require "Vehicles/ISUI/ISVehicleMechanics"
+require "Vehicles/ISUI/ISVehicleMenu"
 
 require "rLib.Shared"
 require "rLib.Events/Vehicle"
 
-rLib.UI = rLib.UI or {}
-rLib.UI.VehicleOverlayEditor = ISCollapsableWindow:derive("rLib.UI.VehicleOverlayEditor")
+rLib.UI.VehicleOverlayEditor = ISPanel:derive("rLib.UI.VehicleOverlayEditor")
 
 function rLib.UI.VehicleOverlayEditor:new(mechanicsUI)
 	local w,h = 300, 300
 
-	local this = ISCollapsableWindow:new(mechanicsUI:getX() - w, mechanicsUI:getY(), 300, 300)
+	local this = ISPanel:new(mechanicsUI:getX() - w, mechanicsUI:getY(), 300, 300)
 	setmetatable(this, self)
 	self.__index = self
 
@@ -21,104 +27,241 @@ function rLib.UI.VehicleOverlayEditor:new(mechanicsUI)
 end
 
 function rLib.UI.VehicleOverlayEditor:createChildren()
-	ISCollapsableWindow.createChildren(self)
+	ISPanel.createChildren(self)
 
-	self:setTitle(getText("UI_rLib_VehicleOverlayEditor"))
-	self:setResizable(false)
-	self.pinButton:setVisible(false)
-	self.collapseButton:setVisible(false)
+	self:noBackground()
+	self:setX(self.MechanicsUI.xCarTexOffset)
+	self:setY(self.MechanicsUI:titleBarHeight() + 10)
+	self:setWidth(self.MechanicsUI:getWidth() - self.MechanicsUI.xCarTexOffset - 10)
+	self:setHeight(5 + rLib.UI.FontSize.Medium + rLib.UI.FontSize.Small * (5 + 1))
 
-	self.CarPrefix, self.CarX, self.CarY = self:GetCarListData("imgPrefix") or "", self:GetCarListData("x") or 0, self:GetCarListData("y") or 0
+	local wNum = 30
+	local wDel = 40
+	local h = rLib.UI.FontSize.Small + 4
+	local pad = 5
 
-	self.uiPrefix = ISTextEntryBox:new(self.CarPrefix, 10, self:titleBarHeight() + 10, 112, 20)
-	self.uiPrefix.font = UIFont.Small
-	self.uiPrefix:initialise()
-	self.uiPrefix:instantiate()
-	self.uiPrefix.onCommandEntered = self.OnCarPrefix
-	self:addChild(self.uiPrefix)
+	self.uiVehiclePrefix = ISTextEntryBox:new("", pad * 2, rLib.UI.FontSize.Medium + 7, --[[wNum * 4 + pad * 3]] 155, h)
+	self.uiVehiclePrefix:initialise()
+	self.uiVehiclePrefix:instantiate()
+	self.uiVehiclePrefix.onCommandEntered = self.OnVehiclePrefix
+	self:AddElement(self.uiVehiclePrefix)
 
-	self.uiCarX = ISTextEntryBox:new(rLib.tostring(self.CarX), self.uiPrefix:getX(), self.uiPrefix:getBottom() + 5, (self.uiPrefix:getWidth() / 2) - 2, self.uiPrefix:getHeight())
-	self.uiCarX.font = self.uiPrefix.font
-	self.uiCarX:initialise()
-	self.uiCarX:instantiate()
-	self.uiCarX.Var = "x"
-	self.uiCarX:setOnlyNumbers(true)
-	self.uiCarX.onCommandEntered = self.OnCarXY
-	self:addChild(self.uiCarX)
+	self.uiVehicleX = ISTextEntryBox:new("", self.uiVehiclePrefix:getRight() + pad, self.uiVehiclePrefix:getY(), wNum, h)
+	self.uiVehicleX.font = self.uiVehiclePrefix.font
+	self.uiVehicleX:initialise()
+	self.uiVehicleX:instantiate()
+	self.uiVehicleX.onCommandEntered = self.OnVehicleXY
+	self.uiVehicleX.Var = "x"
+	self:AddElement(self.uiVehicleX)
 
-	self.uiCarY = ISTextEntryBox:new(rLib.tostring(self.CarY), self.uiCarX:getRight() + 4, self.uiCarX:getY(), (self.uiPrefix:getWidth() / 2) - 2, self.uiCarX:getHeight())
-	self.uiCarY.font = self.uiPrefix.font
-	self.uiCarY:initialise()
-	self.uiCarY:instantiate()
-	self.uiCarY.Var = "y"
-	self.uiCarY:setOnlyNumbers(true)
-	self.uiCarY.onCommandEntered = self.OnCarXY
-	self:addChild(self.uiCarY)
+	self.uiVehicleY = ISTextEntryBox:new("", self.uiVehicleX:getRight() + pad, self.uiVehicleX:getY(), wNum, h)
+	self.uiVehicleY.font = self.uiVehiclePrefix.font
+	self.uiVehicleY:initialise()
+	self.uiVehicleY:instantiate()
+	self.uiVehicleY.onCommandEntered = self.OnVehicleXY
+	self.uiVehicleY.Var = "y"
+	self:AddElement(self.uiVehicleY)
 
-	self.uiPartAdd = ISButton:new(self.uiPrefix:getX(), self.uiCarY:getBottom() + 25, self.uiPrefix:getWidth(), self.uiPrefix:getHeight(), getText("UI_rLib_VehicleOverlayEditor_PartAdd"), self, self.OnPartAdd)
-	self.uiPartAdd:initialise()
-	self.uiPartAdd.borderColor.a = 0.4
-	self.uiPartAdd.backgroundColor.a = 1
-	self.uiPartAdd.backgroundColorMouseOver.a = 0.7
-	self:addChild(self.uiPartAdd)
+	self.uiVehicleDel = ISButton:new(self.uiVehicleY:getRight() + pad, self.uiVehiclePrefix:getY(), wDel, h, getText("UI_rLib_VehicleOverlayEditor_VehicleDel"), self, self.OnVehicleDel)
+	self.uiVehicleDel:initialise()
+	self.uiVehicleDel:instantiate()
+	self:AddElement(self.uiVehicleDel)
 
-	self.uiPartDel = ISButton:new(self.uiPartAdd:getX(), self.uiPartAdd:getY(), self.uiPartAdd:getWidth(), self.uiPartAdd:getHeight(), getText("UI_rLib_VehicleOverlayEditor_PartDel"), self, self.OnPartDel)
-	self.uiPartDel:initialise()
-	self.uiPartDel.borderColor.a = 0.4
-	self.uiPartDel.backgroundColor.a = 1
-	self.uiPartDel.backgroundColorMouseOver.a = 0.7
-	self:addChild(self.uiPartDel)
+	self.uiVehicleAdd = ISButton:new(self.uiVehiclePrefix:getX(), self.uiVehiclePrefix:getY(), self.uiVehicleDel:getRight() - self.uiVehiclePrefix:getX(), h, getText("UI_rLib_VehicleOverlayEditor_VehicleAdd"), self, self.OnVehicleAdd)
+	self.uiVehicleAdd:initialise()
+	self.uiVehicleAdd:instantiate()
+	self:AddElement(self.uiVehicleAdd)
 
-	self.uiPartX1 = ISTextEntryBox:new("", self.uiPrefix:getX(), self.uiPartAdd:getBottom() + 5, (self.uiPrefix:getWidth() / 4) - 3, self.uiPrefix:getHeight())
-	self.uiPartX1.font = self.uiPrefix.font
-	self.uiPartX1:initialise()
-	self.uiPartX1:instantiate()
-	self.uiPartX1:setOnlyNumbers(true)
-	self.uiPartX1.Var = "x"
-	self.uiPartX1.onCommandEntered = self.OnPartXY
-	self:addChild(self.uiPartX1)
-
-	self.uiPartY1 = ISTextEntryBox:new("", self.uiPartX1:getRight() + 4, self.uiPartX1:getY(), self.uiPartX1:getWidth(), self.uiPrefix:getHeight())
-	self.uiPartY1.font = self.uiPrefix.font
-	self.uiPartY1:initialise()
-	self.uiPartY1:instantiate()
-	self.uiPartY1:setOnlyNumbers(true)
-	self.uiPartY1.Var = "y"
-	self.uiPartY1.onCommandEntered = self.OnPartXY
-	self:addChild(self.uiPartY1)
-
-	self.uiPartX2 = ISTextEntryBox:new("", self.uiPartY1:getRight() + 4, self.uiPartY1:getY(), self.uiPartX1:getWidth(), self.uiPrefix:getHeight())
-	self.uiPartX2.font = self.uiPrefix.font
-	self.uiPartX2:initialise()
-	self.uiPartX2:instantiate()
-	self.uiPartX2:setOnlyNumbers(true)
-	self.uiPartX2.Var = "x2"
-	self.uiPartX2.onCommandEntered = self.OnPartXY
-	self:addChild(self.uiPartX2)
-
-	self.uiPartY2 = ISTextEntryBox:new("", self.uiPartX2:getRight() + 4, self.uiPartX2:getY(), self.uiPartX1:getWidth(), self.uiPrefix:getHeight())
-	self.uiPartY2.font = self.uiPrefix.font
-	self.uiPartY2:initialise()
-	self.uiPartY2:instantiate()
-	self.uiPartY2:setOnlyNumbers(true)
-	self.uiPartY2.Var = "y2"
-	self.uiPartY2.onCommandEntered = self.OnPartXY
-	self:addChild(self.uiPartY2)
-
-	self.uiPartTexture = ISTextEntryBox:new("", self.uiPrefix:getX(), self.uiPartY2:getBottom() + 5, self.uiPrefix:getWidth(), self.uiPrefix:getHeight())
-	self.uiPartTexture.font = self.uiPrefix.font
+	self.uiPartTexture = ISTextEntryBox:new("", self.uiVehiclePrefix:getX(), self.uiVehiclePrefix:getBottom() + pad, self.uiVehiclePrefix:getWidth(), h)
+	self.uiPartTexture.font = self.uiVehiclePrefix.font
 	self.uiPartTexture:initialise()
 	self.uiPartTexture:instantiate()
-	self.uiPartTexture.onCommandEntered = self.OnPartTexture
-	self:addChild(self.uiPartTexture)
+	self.uiPartTexture.onCommandEntered = self.OnPartTextureWrapper
+	self:AddElement(self.uiPartTexture)
 
-	self.uiGenerate = ISButton:new(self.uiPrefix:getX(), self:getHeight() - 20, 50, 10, "Generate", self, self.Generate)
+	self.uiPartTextureInfo = ISLabel:new(-1, self.uiPartTexture:getY(), h, "", 1, 1, 1, 1, UIFont.Small, true)
+	self.uiPartTextureInfo:initialise()
+	self.uiPartTextureInfo:instantiate()
+	self.uiPartTextureInfo.center = true
+	self.uiPartTextureInfo:setWidth(self.uiVehicleY:getRight() - self.uiVehicleX:getX())
+	self.uiPartTextureInfo:setX(self.uiVehicleX:getX() + (self.uiVehicleY:getRight() - self.uiVehicleX:getX()) / 2)
+	self:AddElement(self.uiPartTextureInfo)
+
+	self.uiPartTextureAdd = ISButton:new(self.uiPartTexture:getX(), self.uiPartTexture:getY(), self.uiVehicleAdd:getWidth(), h, getText("UI_rLib_VehicleOverlayEditor_PartTextureAdd"), self, self.OnPartTextureAdd)
+	self.uiPartTextureAdd:initialise()
+	self.uiPartTextureAdd:instantiate()
+	self:AddElement(self.uiPartTextureAdd)
+
+	self.uiPartTextureDel = ISButton:new(self.uiVehicleDel:getX(), self.uiPartTextureAdd:getY(), wDel, h, getText("UI_rLib_VehicleOverlayEditor_PartTextureDel"), self, self.OnPartTextureDel)
+	self.uiPartTextureDel:initialise()
+	self.uiPartTextureDel:instantiate()
+	self:AddElement(self.uiPartTextureDel)
+
+	self.uiPartSpotX1 = ISTextEntryBox:new("", self.uiVehiclePrefix:getX(), self.uiPartTexture:getBottom() + pad, (self.uiVehiclePrefix:getWidth() - (pad * 3)) / 4, self.uiVehiclePrefix:getHeight())
+	self.uiPartSpotX1.font = self.uiVehiclePrefix.font
+	self.uiPartSpotX1:initialise()
+	self.uiPartSpotX1:instantiate()
+	self.uiPartSpotX1.Var = "x"
+	self.uiPartSpotX1.onCommandEntered = self.OnPartSpotXY
+	self:AddElement(self.uiPartSpotX1)
+
+	self.uiPartSpotY1 = ISTextEntryBox:new("", self.uiPartSpotX1:getRight() + pad, self.uiPartSpotX1:getY(), self.uiPartSpotX1:getWidth(), self.uiVehiclePrefix:getHeight())
+	self.uiPartSpotY1.font = self.uiVehiclePrefix.font
+	self.uiPartSpotY1:initialise()
+	self.uiPartSpotY1:instantiate()
+	self.uiPartSpotY1.Var = "y"
+	self.uiPartSpotY1.onCommandEntered = self.OnPartSpotXY
+	self:AddElement(self.uiPartSpotY1)
+
+	self.uiPartSpotX2 = ISTextEntryBox:new("", self.uiPartSpotY1:getRight() + pad, self.uiPartSpotY1:getY(), self.uiPartSpotY1:getWidth(), self.uiVehiclePrefix:getHeight())
+	self.uiPartSpotX2.font = self.uiVehiclePrefix.font
+	self.uiPartSpotX2:initialise()
+	self.uiPartSpotX2:instantiate()
+	self.uiPartSpotX2.Var = "x2"
+	self.uiPartSpotX2.onCommandEntered = self.OnPartSpotXY
+	self:AddElement(self.uiPartSpotX2)
+
+	self.uiPartSpotY2 = ISTextEntryBox:new("", self.uiPartSpotX2:getRight() + pad, self.uiPartSpotX2:getY(), self.uiPartSpotX2:getWidth(), self.uiVehiclePrefix:getHeight())
+	self.uiPartSpotY2.font = self.uiVehiclePrefix.font
+	self.uiPartSpotY2:initialise()
+	self.uiPartSpotY2:instantiate()
+	self.uiPartSpotY2.Var = "y2"
+	self.uiPartSpotY2.onCommandEntered = self.OnPartSpotXY
+	self:AddElement(self.uiPartSpotY2)
+
+	self.uiPartSpotAdd = ISButton:new(self.uiPartSpotX1:getX(), self.uiPartSpotX1:getY(), self.uiPartTextureAdd:getWidth(), h, getText("UI_rLib_VehicleOverlayEditor_PartSpotAdd"), self, self.OnPartSpotAdd)
+	self.uiPartSpotAdd:initialise()
+	self.uiPartSpotAdd:instantiate()
+	self:AddElement(self.uiPartSpotAdd)
+
+	self.uiPartSpotDel = ISButton:new(self.uiPartTextureDel:getX(), self.uiPartSpotAdd:getY(), wDel, h, getText("UI_rLib_VehicleOverlayEditor_PartSpotDel"), self, self.OnPartSpotDel)
+	self.uiPartSpotDel:initialise()
+	self.uiPartSpotDel:instantiate()
+	self:AddElement(self.uiPartSpotDel)
+
+	self.uiPartSpotInfo = ISLabel:new(-1, self.uiPartSpotX1:getY(), h, "", 1, 1, 1, 1, UIFont.Small, true)
+	self.uiPartSpotInfo:initialise()
+	self.uiPartSpotInfo:instantiate()
+	self.uiPartSpotInfo.center = true
+	self.uiPartSpotInfo:setX(self.uiPartTextureInfo:getX())
+	self.uiPartSpotInfo:setWidth(self.uiPartTextureInfo:getWidth())
+	self:AddElement(self.uiPartSpotInfo)
+
+	local wDisplay = getTextManager():MeasureStringX(UIFont.Small, "ISCarMechanicsOverlay") + pad * 2
+	local wGenerate = getTextManager():MeasureStringX(UIFont.Small, tGenerate) + pad * 2
+	local tGenerate = getText("UI_rLib_VehicleOverlayEditor_Generate")
+
+	wGenerate = math.max(wGenerate, wDisplay)
+	wDisplay = math.max(wGenerate, wDisplay)
+
+	self.uiDisplay = ISButton:new(self:getWidth() - (pad * 2) - wDisplay, self.uiPartTexture:getY(), wDisplay, h, "ISCarMechanicsOverlay", self, self.OnDisplay)
+	self.uiDisplay:initialise()
+	self.uiDisplay:instantiate()
+	self:AddElement(self.uiDisplay)
+
+	self.uiGenerate = ISButton:new(self:getWidth() - (pad * 2) - wGenerate, self.uiPartSpotX1:getY(), wGenerate, h, tGenerate, self, self.OnGenerate)
 	self.uiGenerate:initialise()
-	self.uiGenerate.borderColor.a = 0.4
-	self.uiGenerate.backgroundColor.a = 1
-	self.uiGenerate.backgroundColorMouseOver.a = 0.7
-	self:addChild(self.uiGenerate)
+	self.uiGenerate:instantiate()
+	self:AddElement(self.uiGenerate)
+end
 
+function rLib.UI.VehicleOverlayEditor:prerender()
+	ISPanel.prerender(self)
+	self:drawRectBorderStatic(0, 0, self:getWidth(), self:getHeight(), self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b)
+
+	self:UpdateSelectedPart()
+end
+
+function rLib.UI.VehicleOverlayEditor:postrender(target, func)
+	if self.uiPartSpotX1.Val ~= nil and self.uiPartSpotY1.Val ~= nil and self.uiPartSpotX2.Val ~= nil and self.uiPartSpotY2.Val ~= nil then
+		func(target, self.uiPartSpotX1.Val, self.uiPartSpotY1.Val, self.uiPartSpotX2.Val - self.uiPartSpotX1.Val, self.uiPartSpotY2.Val - self.uiPartSpotY1.Val, 0.5, 0, 0.5, 0)
+	end
+end
+
+function rLib.UI.VehicleOverlayEditor:renderMechanics()
+	ISCollapsableWindow.render(self)
+	if self.isCollapsed then return end
+
+	self:checkEngineFull()
+	self:renderCarOverlay()
+
+	local title = self.vehicle:getScript():getFullName()
+	if self.rLib.VehicleOverlayEditor.SelectedPart then
+		title = title .. " (" .. self.rLib.VehicleOverlayEditor.SelectedPart:getId() .. ")"
+	end
+
+	self:drawTextCentre(title, self.xCarTexOffset + 5 + (self.rLib.VehicleOverlayEditor:getWidth() / 2), self:titleBarHeight() + 10 + 5, self.partCatRGB.r, self.partCatRGB.g, self.partCatRGB.b, self.partCatRGB.a, UIFont.Medium)
+
+	if self.drawJoypadFocus and self.leftListHasFocus then
+		local ui = self.listbox
+		self:drawRectBorder(ui:getX(), ui:getY(), ui:getWidth(), ui:getHeight(), 0.4, 0.2, 1.0, 1.0)
+		self:drawRectBorder(ui:getX()+1, ui:getY()+1, ui:getWidth()-2, ui:getHeight()-2, 0.4, 0.2, 1.0, 1.0)
+	elseif self.drawJoypadFocus then
+		local ui = self.bodyworklist
+		self:drawRectBorder(ui:getX(), ui:getY(), ui:getWidth(), ui:getHeight(), 0.4, 0.2, 1.0, 1.0)
+		self:drawRectBorder(ui:getX()+1, ui:getY()+1, ui:getWidth()-2, ui:getHeight()-2, 0.4, 0.2, 1.0, 1.0)
+	end
+end
+
+--
+
+function rLib.UI.VehicleOverlayEditor:AddElement(element)
+	if element.Type == "ISButton" then
+		element.borderColor.a = 0.4
+		element.backgroundColor.a = 1
+		element.backgroundColorMouseOver.a = 0.7
+	elseif element.Type == "ISTextEntryBox" then
+		if element.Var then
+			element:setOnlyNumbers(true)
+			element:setMaxTextLength(4)
+		end
+	end
+
+	self:addChild(element)
+end
+
+function rLib.UI.VehicleOverlayEditor:ShowElements(show, enable, ...)
+	for _,element in ipairs({...}) do
+		if element.Type == "ISButton" then
+			element:setEnable(enable)
+		else
+			element:setEnabled(enable)
+		end
+
+		element:setVisible(show)
+	end
+end
+
+function rLib.UI.VehicleOverlayEditor:Show(show)
+	if show and type(show) ~= "boolean" then
+		show = nil -- required as ISButton pushes itself in front of args --
+	end
+
+	if show == nil then
+		show = not self:getIsVisible()
+	end
+
+	if not self.Vanilla then
+		self.Vanilla = {}
+		self.Vanilla.render = self.MechanicsUI.render
+	end
+
+	self.MechanicsUI.render = show and self.renderMechanics or self.Vanilla.render
+
+	self:DestroyModals()
+	self:OnChangeVehicle(self:GetVehicle())
+	self:setVisible(show)
+end
+
+function rLib.UI.VehicleOverlayEditor:DestroyModals()
+	if self.Modal then
+		self.Modal:destroy()
+		self.Modal = nil
+	end
+	if self.ModalError then
+		self.ModalError:destroy()
+		self.ModalError = nil
+	end
 end
 
 function rLib.UI.VehicleOverlayEditor:GeneratePartList(codePartial)
@@ -131,22 +274,521 @@ function rLib.UI.VehicleOverlayEditor:GeneratePartList(codePartial)
 	return result
 end
 
-function rLib.UI.VehicleOverlayEditor:GenerateSafeAccess(str)
-	if string.match(str, "^[A-Za-z0-9_]+$") then
-		return "." .. str
+function rLib.UI.VehicleOverlayEditor:GenerateSafeAccess(var)
+	if string.match(var, "^[A-Za-z0-9_]+$") and not string.match(var, "^[0-9]+") then
+		return "." .. var
 	end
 
-	return "[\" .. string .. \"]"
+	return "[\"" .. var .. "\"]"
 end
 
-function rLib.UI.VehicleOverlayEditor:Generate(button)
+--[[
+local ISVM_render = ISVehicleMechanics.render
+function ISVehicleMechanics:render()
+	ISVM_render(self)
+
+	if self.rLib and self.rLib.VehicleOverlayEditor then
+		self.rLib.VehicleOverlayEditor:postrender(self, self.drawRect)
+	end
+end
+]]--
+
+function rLib.UI.VehicleOverlayEditor:GetVehicle()
+	assert(instanceof(self.MechanicsUI.vehicle, "BaseVehicle"))
+
+	return self.MechanicsUI.vehicle
+end
+
+function rLib.UI.VehicleOverlayEditor:GetVehicleFullName()
+	return self:GetVehicle():getScript():getFullName()
+end
+
+function rLib.UI.VehicleOverlayEditor:UpdateSelectedPart()
+	local selectedPart
+	if self.MechanicsUI.listbox.selected > 0 and self.MechanicsUI.listbox.items[self.MechanicsUI.listbox.selected] then
+		selectedPart = self.MechanicsUI.listbox.items[self.MechanicsUI.listbox.selected].item.part
+	elseif self.MechanicsUI.bodyworklist.selected > 0 and self.MechanicsUI.bodyworklist.items[self.MechanicsUI.bodyworklist.selected] then
+		selectedPart = self.MechanicsUI.bodyworklist.items[self.MechanicsUI.bodyworklist.selected].item.part
+	end
+
+	if self.SelectedPart ~= selectedPart then
+		self.SelectedPart = selectedPart
+		self:OnChangeSelectedPart(self.SelectedPart)
+	end
+end
+
+function rLib.UI.VehicleOverlayEditor:IsCarListOK()
+	local vehicle = self:GetVehicleFullName()
+
+	return ISCarMechanicsOverlay.CarList[vehicle] ~= nil
+end
+
+function rLib.UI.VehicleOverlayEditor:GetCarListData(name)
+	assert(rLib.arg(name, "string"))
+
+	local vehicle = self:GetVehicleFullName()
+
+	if ISCarMechanicsOverlay.CarList[vehicle] and ISCarMechanicsOverlay.CarList[vehicle][name] then
+		return ISCarMechanicsOverlay.CarList[vehicle][name]
+	end
+
+	return nil
+end
+
+function rLib.UI.VehicleOverlayEditor:SetCarListData(name, data)
+	assert(rLib.arg(name, "string"))
+
+	local vehicle = self:GetVehicleFullName()
+
+	ISCarMechanicsOverlay.CarList[vehicle] =
+	ISCarMechanicsOverlay.CarList[vehicle] or {}
+
+	ISCarMechanicsOverlay.CarList[vehicle][name] = data
+
+	if data == nil and table.isempty(ISCarMechanicsOverlay.CarList[vehicle]) then
+		ISCarMechanicsOverlay.CarList[vehicle] = nil
+	end
+end
+
+function rLib.UI.VehicleOverlayEditor:IsPartListOK(part)
+	assert(rLib.arg(part, "VehiclePart"))
+
+	local partId = part:getId()
+	local prefix = self:GetCarListData("imgPrefix")
+	if not prefix then
+		return nil
+	end
+
+	return ISCarMechanicsOverlay.PartList[partId] ~= nil and ISCarMechanicsOverlay.PartList[partId].vehicles ~= nil and ISCarMechanicsOverlay.PartList[partId].vehicles[prefix] ~= nil
+end
+
+function rLib.UI.VehicleOverlayEditor:GetPartListData(part, name, vanillaFallback)
+	assert(rLib.arg(part, "VehiclePart"))
+	assert(rLib.arg(name, "string"))
+
+	local prefix = self:GetCarListData("imgPrefix")
+	if not prefix then
+		return nil, nil
+	end
+
+	local partId = part:getId()
+
+	if name == "img" then
+		local vehicle = self:GetVehicleFullName()
+
+		if ISCarMechanicsOverlay.CarList[vehicle] and ISCarMechanicsOverlay.CarList[vehicle].PartList and ISCarMechanicsOverlay.CarList[vehicle].PartList[partId] and ISCarMechanicsOverlay.CarList[vehicle].PartList[partId][name] then
+			return ISCarMechanicsOverlay.CarList[vehicle].PartList[partId][name], "vehicle"
+		end
+	else
+		if ISCarMechanicsOverlay.PartList[partId] and ISCarMechanicsOverlay.PartList[partId].vehicles and ISCarMechanicsOverlay.PartList[partId].vehicles[prefix] and ISCarMechanicsOverlay.PartList[partId].vehicles[prefix][name] then
+			return ISCarMechanicsOverlay.PartList[partId].vehicles[prefix][name], "part"
+		end
+	end
+
+	if vanillaFallback then
+		local result = self:GetVanillaPartListData(part, name)
+		return result, "vanilla"
+	end
+
+	return nil, nil
+end
+
+function rLib.UI.VehicleOverlayEditor:GetVanillaPartListData(part, name)
+	assert(rLib.arg(part, "VehiclePart"))
+	assert(rLib.arg(name, "string"))
+
+	local partId = part:getId()
+
+	if ISCarMechanicsOverlay.PartList[partId] and ISCarMechanicsOverlay.PartList[partId][name] then
+		return ISCarMechanicsOverlay.PartList[partId][name]
+	end
+
+	return nil
+end
+
+function rLib.UI.VehicleOverlayEditor:SetPartListData(part, name, data)
+	assert(rLib.arg(part, "VehiclePart"))
+	assert(rLib.arg(name, "string"))
+
+	local partId = part:getId()
+
+	if name == "img" then
+		local vehicle = self:GetVehicleFullName()
+
+		ISCarMechanicsOverlay.CarList[vehicle].PartList =
+		ISCarMechanicsOverlay.CarList[vehicle].PartList or {}
+
+		ISCarMechanicsOverlay.CarList[vehicle].PartList[partId] =
+		ISCarMechanicsOverlay.CarList[vehicle].PartList[partId] or {}
+
+		ISCarMechanicsOverlay.CarList[vehicle].PartList[partId].img = data
+
+		local carListDebug = ISCarMechanicsOverlay.CarList[vehicle]
+
+		if data == nil then
+			if table.isempty(ISCarMechanicsOverlay.CarList[vehicle].PartList[partId]) then
+				ISCarMechanicsOverlay.CarList[vehicle].PartList[partId] = nil
+			end
+
+			if table.isempty(ISCarMechanicsOverlay.CarList[vehicle].PartList) then
+				ISCarMechanicsOverlay.CarList[vehicle].PartList = nil
+			end
+		end
+	else
+		local prefix = self:GetCarListData("imgPrefix")
+
+		ISCarMechanicsOverlay.PartList[partId] =
+		ISCarMechanicsOverlay.PartList[partId] or {}
+
+		ISCarMechanicsOverlay.PartList[partId].vehicles =
+		ISCarMechanicsOverlay.PartList[partId].vehicles or {}
+
+		ISCarMechanicsOverlay.PartList[partId].vehicles[prefix] =
+		ISCarMechanicsOverlay.PartList[partId].vehicles[prefix] or {}
+
+		ISCarMechanicsOverlay.PartList[partId].vehicles[prefix][name] = data
+
+		if data == nil and table.isempty(ISCarMechanicsOverlay.PartList[partId].vehicles[prefix]) then
+			ISCarMechanicsOverlay.PartList[partId].vehicles[prefix] = nil
+
+			if table.isempty(ISCarMechanicsOverlay.PartList[partId].vehicles) then
+				ISCarMechanicsOverlay.PartList[partId].vehicles = nil
+			end
+
+			if table.isempty(ISCarMechanicsOverlay.PartList[partId]) then
+				ISCarMechanicsOverlay.PartList[partId] = nil
+			end
+		end
+	end
+end
+
+--
+
+function rLib.UI.VehicleOverlayEditor:GetPrefixTextureName(name)
+	name = "media/ui/vehicles/mechanic overlay/" .. name .. "base.png"
+
+	return name, getTexture(name) ~= nil
+end
+
+function rLib.UI.VehicleOverlayEditor:GetPartTextureName(name)
+	local prefix = self:GetCarListData("imgPrefix")
+	if not prefix then
+		return nil, false
+	end
+
+	name = "media/ui/vehicles/mechanic overlay/" .. prefix .. name .. ".png"
+
+	return name, getTexture(name) ~= nil
+end
+
+--
+
+function rLib.UI.VehicleOverlayEditor:OnChangeVehicle(vehicle)
+	assert(rLib.arg(vehicle, "BaseVehicle"))
+
+	local prefix = self:GetCarListData("imgPrefix")
+	local x = self:GetCarListData("x")
+	local y = self:GetCarListData("y")
+
+	local valid = prefix ~= nil and x ~= nil and y ~= nil
+
+	if valid then
+		self.uiVehiclePrefix:setText(tostring(prefix))
+		self.uiVehicleX:setText(tostring(x))
+		self.uiVehicleY:setText(tostring(y))
+	end
+
+	self:ShowElements(not valid, not valid, self.uiVehicleAdd)
+	self:ShowElements(valid, valid, self.uiVehicleDel, self.uiVehiclePrefix, self.uiVehicleX, self.uiVehicleY, self.uiGenerate)
+
+	self.SelectedPart = nil
+	self:UpdateSelectedPart()
+end
+
+function rLib.UI.VehicleOverlayEditor:OnChangeSelectedPart(part)
+	assert(rLib.arg(part, "VehiclePart", "nil"))
+
+	local prefix = self:GetCarListData("imgPrefix")
+
+	-- texture --
+
+	local texture
+
+	if not part then
+		self:ShowElements(false, false, self.uiPartTextureAdd, self.uiPartTextureDel, self.uiPartTexture, self.uiPartTextureInfo)
+	elseif part and prefix then
+		local textureSource
+		texture, textureSource = self:GetPartListData(part, "img", true)
+		if texture ~= nil and textureSource ~= nil then
+			self.uiPartTexture:setText(texture)
+			self.uiPartTexture.Previous = texture
+
+			self.uiPartTextureInfo.name = textureSource == "vanilla" and getText("UI_rLib_VehicleOverlayEditor_default") or getText("UI_rLib_VehicleOverlayEditor_custom")
+			self:ShowElements(true, textureSource ~= "vanilla", self.uiPartTextureDel)
+			self:ShowElements(true, true, self.uiPartTexture, self.uiPartTextureInfo)
+			self:ShowElements(false, false, self.uiPartTextureAdd, self.uiPartTextureAddCheck)
+			texture = true
+		else
+			self:ShowElements(true, true, self.uiPartTextureAdd)
+			self:ShowElements(false, false, self.uiPartTextureDel, self.uiPartTexture, self.uiPartTextureInfo)
+			texture = false
+		end
+	else
+		self:ShowElements(true, false, self.uiPartTextureAdd)
+		self:ShowElements(false, false, self.uiPartTextureAddCheck, self.uiPartTextureDel, self.uiPartTexture, self.uiPartTextureInfo)
+	end
+
+	-- hotspot --
+
+	local spot = false
+
+	if not part then
+		self:ShowElements(false, false, self.uiPartSpotAdd, self.uiPartSpotDel, self.uiPartSpotX1, self.uiPartSpotY1, self.uiPartSpotX2, self.uiPartSpotY2, self.uiPartSpotInfo)
+	elseif texture then
+		local x1, x1Source = self:GetPartListData(part, "x", true)
+		local y1, y1Source = self:GetPartListData(part, "y", true)
+		local x2, x2Source = self:GetPartListData(part, "x2", true)
+		local y2, y2Source = self:GetPartListData(part, "y2", true)
+		local sameSource = x1Source == y1Source and y1Source == x2Source and x2Source == y2Source
+		spot = x1 ~= nil and y1 ~= nil and x2 ~= nil and y2 ~= nil
+		if spot and sameSource then
+			for _,ui in ipairs({ self.uiPartSpotX1, self.uiPartSpotY1, self.uiPartSpotX2, self.uiPartSpotY2 }) do
+				ui.Val = self:GetPartListData(part, ui.Var, true)
+				ui:setText(tostring(ui.Val))
+			end
+
+			self.uiPartSpotInfo.name = x1Source == "vanilla" and getText("UI_rLib_VehicleOverlayEditor_default") or getText("UI_rLib_VehicleOverlayEditor_custom")
+			self:ShowElements(false, false, self.uiPartSpotAdd)
+			self:ShowElements(true, x1Source ~= "vanilla", self.uiPartSpotDel)
+			self:ShowElements(true, true, self.uiPartSpotX1, self.uiPartSpotY1, self.uiPartSpotX2, self.uiPartSpotY2, self.uiPartSpotInfo)
+			spot = true
+		else
+			self:ShowElements(true, true, self.uiPartSpotAdd)
+			self:ShowElements(false, false, self.uiPartSpotDel, self.uiPartSpotX1, self.uiPartSpotY1, self.uiPartSpotX2, self.uiPartSpotY2, self.uiPartSpotInfo)
+			spot = false
+		end
+	else
+		self:ShowElements(true, false, self.uiPartSpotAdd)
+		self:ShowElements(false, false, self.uiPartSpotDel, self.uiPartSpotX1, self.uiPartSpotY1, self.uiPartSpotX2, self.uiPartSpotY2, self.uiPartSpotInfo)
+	end
+end
+
+function rLib.UI.VehicleOverlayEditor:OnVehiclePrefix()
+	local name, valid = self:getParent():GetPrefixTextureName(self:getText())
+
+	self:setValid(valid)
+	if not valid then
+		rLib.dprint("Invalid texture : %s", name)
+		return
+	end
+
+	self:getParent():SetCarListData("imgPrefix", self:getText())
+end
+
+function rLib.UI.VehicleOverlayEditor:OnVehicleXY()
+	self:getParent():SetCarListData(self.Var, tonumber(self:getText()))
+end
+
+function rLib.UI.VehicleOverlayEditor:OnVehicleAdd()
+	self:DestroyModals()
+
+	self.Modal = ISModalDialog:new(0, 0, 0, 0, getText("UI_rLib_VehicleOverlayEditor_VehiclePrefixNew"), true, self, self.OnVehicleAddCheck)
+	self.Modal:initialise()
+	self.Modal:setX((getCore():getScreenWidth() / 2) - (self.Modal:getWidth() / 2))
+	self.Modal:setY(getCore():getScreenHeight() / 3)
+
+	local pad = self.Modal:getHeight() - self.Modal.yes:getBottom()
+
+	self.Modal.uiVehiclePrefixNew = ISTextEntryBox:new("", pad, self.Modal.yes:getY(), self.Modal:getWidth() - pad * 2, rLib.UI.FontSize.Small + 4)
+	self.Modal.uiVehiclePrefixNew:initialise()
+	self.Modal.uiVehiclePrefixNew:instantiate()
+	self.Modal.uiVehiclePrefixNew.onCommandEntered = self.OnVehicleAddCheck
+	self.Modal:addChild(self.Modal.uiVehiclePrefixNew)
+
+	self.Modal.yes:setEnable(false)
+	self.Modal:setHeight(self.Modal.uiVehiclePrefixNew:getBottom() + pad + self.Modal.yes:getHeight() + pad)
+
+	self.Modal.Editor = self
+	self.Modal:addToUIManager()
+end
+
+function rLib.UI.VehicleOverlayEditor:OnVehicleAddCheck(button) -- handles text entry and buttons events --
+	if button then
+		if button.internal == "YES" then
+			local editor = button:getParent().Editor
+			local vehicle = editor:GetVehicle()
+
+			if not vehicle then
+				return
+			end
+
+			editor:SetCarListData("imgPrefix", button:getParent().uiVehiclePrefixNew:getText())
+			editor:SetCarListData("x", 0)
+			editor:SetCarListData("y", 0)
+			editor:DestroyModals()
+			editor:OnChangeVehicle(vehicle)
+		end
+		return
+	end
+
+	function modalError(text)
+		self:getParent().Editor.ModalError = ISModalDialog:new(0, 0, 0, 0, text, false)
+		self:getParent().Editor.ModalError:initialise()
+		self:getParent().Editor.ModalError:setX((getCore():getScreenWidth() / 2) - (self:getParent().Editor.ModalError:getWidth() / 2))
+		self:getParent().Editor.ModalError:setY(getCore():getScreenHeight() / 3)
+		self:getParent().Editor.ModalError:addToUIManager()
+	end
+
+	if self:getText() == "" then
+		return modalError(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameEmpty"))
+	end
+
+	local name, valid = self:getParent().Editor:GetPrefixTextureName(self:getText())
+	if not valid then
+		return modalError(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameInvalid") .. "\n\n" .. name)
+	end
+
+	self:getParent().yes:setEnable(true)
+end
+
+function rLib.UI.VehicleOverlayEditor:OnVehicleDel()
+	local vehicle = self:GetVehicle()
+	if not vehicle then
+		return
+	end
+
+	for p=0,vehicle:getPartCount()-1 do
+		for _,name in ipairs({"x", "y", "x2", "y2", "img"}) do
+			self:SetPartListData(vehicle:getPartByIndex(p), name, nil)
+		end
+	end
+
+	for _,name in ipairs({"imgPrefix", "x", "y"}) do
+		self:SetCarListData(name, nil)
+	end
+
+	self:OnChangeVehicle(vehicle)
+end
+
+--
+
+function rLib.UI.VehicleOverlayEditor:OnPartTexture(ui)
+	if not self.SelectedPart then
+		return
+	end
+
+	local data = ui:getText()
+	if data == "" then
+		data = nil
+	end
+
+	local img = self:GetVanillaPartListData(self.SelectedPart, "img")
+
+	if not data and not img then
+		rLib.dprint("[rLib.UI.VehicleOverlayEditor.OnPartTexture] WARNING : Default texture for part '%s' does not exists", self.SelectedPart:getId())
+		ui:setText(ui.Previous)
+		return
+	end
+
+	if data then
+		local name, valid = self:GetPartTextureName(data)
+		if not valid then
+			rLib.dprint("[rLib.UI.VehicleOverlayEditor.OnPartTexture] WARNING : Invalid texture : %s", name)
+			ui:setText(ui.Previous)
+			return
+		else
+			rLib.dprint("??? %s", name)
+		end
+
+		ui.Previous = data
+	end
+
+	if data and data == img then
+		data = nil
+	end
+
+	self:SetPartListData(self.SelectedPart, "img", data)
+	self:OnChangeSelectedPart(self.SelectedPart)
+end
+
+function rLib.UI.VehicleOverlayEditor:OnPartTextureWrapper()
+	self:getParent():OnPartTexture(self)
+end
+
+function rLib.UI.VehicleOverlayEditor:OnPartTextureAdd(button)
+	if not self.SelectedPart then
+		return
+	end
+
+	self:SetPartListData(self.SelectedPart, "img", "base")
+	self:OnChangeSelectedPart(self.SelectedPart)
+end
+
+function rLib.UI.VehicleOverlayEditor:OnPartTextureDel(button)
+	if not self.SelectedPart then
+		return
+	end
+
+	self:OnPartSpotDel()
+	self:SetPartListData(self.SelectedPart, "img", nil)
+	self:OnChangeSelectedPart(self.SelectedPart)
+end
+
+function rLib.UI.VehicleOverlayEditor:OnPartSpotAdd(button)
+	if not self.SelectedPart then
+		return
+	end
+
+	for _,name in ipairs({ "x", "y", "x2", "y2" }) do
+		self:SetPartListData(self.SelectedPart, name, 0)
+	end
+	self:OnChangeSelectedPart(self.SelectedPart)
+end
+
+function rLib.UI.VehicleOverlayEditor:OnPartSpotDel(button)
+	if not self.SelectedPart then
+		return
+	end
+
+	for _,name in ipairs({ "x", "y", "x2", "y2" }) do
+		self:SetPartListData(self.SelectedPart, name, nil)
+	end
+	self:OnChangeSelectedPart(self.SelectedPart)
+end
+
+function rLib.UI.VehicleOverlayEditor:OnPartSpotXY()
+	if not self:getParent().SelectedPart then
+		return
+	end
+
+	self.Val = tonumber(self:getText())
+
+	-- fully copy coords into vehicle-specific table when editing default coords --
+	for _,ui in ipairs({ self:getParent().uiPartSpotX1, self:getParent().uiPartSpotY1, self:getParent().uiPartSpotX2, self:getParent().uiPartSpotY2 }) do
+		self:getParent():SetPartListData(self:getParent().SelectedPart, ui.Var, ui.Val)
+	end
+
+	self:setText(tostring(self.Val)) -- remove leading zeros --
+
+	self:getParent():OnChangeSelectedPart(self:getParent().SelectedPart)
+end
+
+function rLib.UI.VehicleOverlayEditor:OnDisplay(button)
+	local raw = ObjectViewer:new(getCore():getScreenWidth() / 2, 0, 600, 400, ISCarMechanicsOverlay)
+
+	raw:initialise()
+	raw:addToUIManager()
+end
+
+function rLib.UI.VehicleOverlayEditor:OnGenerate(button)
 	local code, codeImg, codeCoord, parts = {}, {}, {}
 
 	local vehicle = self:GetVehicle()
-	local vehicleName = vehicle:getScript():getFullName()
+	local vehicleName = self:GetVehicleFullName()
 	local carList = string.format("ISCarMechanicsOverlay.CarList[\"%s\"]", vehicleName)
 	local prefix = self:GetCarListData("imgPrefix")
 	local func = string.format( "%sMechanicsOverlay", vehicleName:gsub("%.", ""))
+	local partList = ""
 
 	table.insert(code, "--[[*]]-- Generated automagically by RotatorsLib --[[*]]--")
 	table.insert(code, "")
@@ -155,8 +797,6 @@ function rLib.UI.VehicleOverlayEditor:Generate(button)
 	table.insert(code, string.format("local function %s()", func))
 
 	if self:IsCarListOK() then
-		table.insert(code, string.format("\t%s = { imgPrefix = \"%s\", x = %d, y = %d }", carList, prefix, self:GetCarListData("x"), self:GetCarListData("y")))
-
 		for p=0,vehicle:getPartCount()-1 do
 			local part = vehicle:getPartByIndex(p)
 			local partId = part:getId()
@@ -173,24 +813,34 @@ function rLib.UI.VehicleOverlayEditor:Generate(button)
 					error("[rLib] Unknown part image type, PANIK")
 				end
 
-				codeImg[partId] = string.format("\tISCarMechanicsOverlay.CarList[\"%s\"].PartList%s = { %simg = %s%s%s }", vehicleName, self:GenerateSafeAccess(partId), multi, quote, rLib.tostring(img), quote)
+				codeImg[partId] = string.format("\t%s.PartList%s = { %simg = %s%s%s }", carList, self:GenerateSafeAccess(partId), multi, quote, rLib.tostring(img), quote)
 			end
 
 			if self:IsPartListOK(part) then
-				local x1 = self:GetPartListData(part, "x")
-				local y1 = self:GetPartListData(part, "y")
-				local x2 = self:GetPartListData(part, "x2")
-				local y2 = self:GetPartListData(part, "y2")
+				local x1, y1, x2, y2 = self:GetPartListData(part, "x"), self:GetPartListData(part, "y"), self:GetPartListData(part, "x2"), self:GetPartListData(part, "y2")
 				if x1 ~= nil and y1 ~= nil and x2 ~= nil and y2 ~= nil then
 					codeCoord[partId] = string.format("\tISCarMechanicsOverlay.PartList%s.vehicles%s = { x = %d, y = %d, x2 = %d, y2 = %d }", self:GenerateSafeAccess(partId), self:GenerateSafeAccess(prefix), x1, y1, x2, y2)
 				end
 			end
 		end
 
+		if not table.isempty(codeCoord) then
+			parts = self:GeneratePartList(codeCoord)
+			table.insert(code, "\tfor _,name in ipairs({ \"" .. table.concat(parts, "\", \"") .. "\" }) do")
+			table.insert(code, "\t\tISCarMechanicsOverlay.PartList[name] = ISCarMechanicsOverlay.PartList[name] or {}")
+			table.insert(code, "\t\tISCarMechanicsOverlay.PartList[name].vehicles = ISCarMechanicsOverlay.PartList[name].vehicles or {}")
+			table.insert(code, "\tend")
+			table.insert(code, "")
+		end
+
+		if not table.isempty(codeImg) then
+			partList = ", PartList = {}"
+		end
+
+		table.insert(code, string.format("\t%s = { imgPrefix = \"%s\", x = %d, y = %d%s }", carList, prefix, self:GetCarListData("x"), self:GetCarListData("y"), partList))
+
 		if not table.isempty(codeImg) then
 			parts = self:GeneratePartList(codeImg)
-			table.insert(code, "")
-			table.insert(code, string.format("\tISCarMechanicsOverlay.CarList[\"%s\"].PartList = {}", vehicleName))
 			for _,id in ipairs(parts) do
 				table.insert(code, codeImg[id])
 			end
@@ -198,11 +848,6 @@ function rLib.UI.VehicleOverlayEditor:Generate(button)
 
 		if not table.isempty(codeCoord) then
 			parts = self:GeneratePartList(codeCoord)
-			table.insert(code, "")
-			table.insert(code, "\tfor _,name in ipairs({ \"" .. table.concat(parts, "\", \"") .. "\" }) do")
-			table.insert(code, "\t\tISCarMechanicsOverlay.PartList[name] = ISCarMechanicsOverlay.PartList[name] or {}")
-			table.insert(code, "\t\tISCarMechanicsOverlay.PartList[name].vehicles = ISCarMechanicsOverlay.PartList[name].vehicles or {}")
-			table.insert(code, "\tend")
 			table.insert(code, "")
 			for _,id in ipairs(parts) do
 				table.insert(code, codeCoord[id])
@@ -216,292 +861,45 @@ function rLib.UI.VehicleOverlayEditor:Generate(button)
 	Clipboard.setClipboard(table.concat(code, "\n") .. "\n")
 end
 
-function rLib.UI.VehicleOverlayEditor:prerender()
-	ISCollapsableWindow.prerender(self)
+---
 
-	local selectedPart
-	if self.MechanicsUI.listbox.selected > 0 and self.MechanicsUI.listbox.items[self.MechanicsUI.listbox.selected] then
-		selectedPart = self.MechanicsUI.listbox.items[self.MechanicsUI.listbox.selected].item.part
-	elseif self.MechanicsUI.bodyworklist.selected > 0 and self.MechanicsUI.bodyworklist.items[self.MechanicsUI.bodyworklist.selected] then
-		selectedPart = self.MechanicsUI.bodyworklist.items[self.MechanicsUI.bodyworklist.selected].item.part
-	end
-
-	if self.SelectedPart ~= selectedPart then
-		self.SelectedPart = selectedPart
-		self:OnSelectedPartChange(self.SelectedPart)
+function rLib.UI.VehicleOverlayEditor.Enable(ui) -- called from mods --
+	if ui and ui:isVisible() and ui.rLib and ui.rLib.VehicleOverlayEditorButton then
+		ui.rLib.VehicleOverlayEditorButton:setVisible(true)
 	end
 end
 
-function rLib.UI.VehicleOverlayEditor:postrender(target, func)
-	if self.uiPartX1.Val ~= nil and self.uiPartY1.Val ~= nil and self.uiPartX2.Val ~= nil and self.uiPartY2.Val ~= nil then
-		func(target, self.uiPartX1.Val, self.uiPartY1.Val, self.uiPartX2.Val - self.uiPartX1.Val, self.uiPartY2.Val - self.uiPartY1.Val, 0.5, 0, 0.5, 0)
+function rLib.UI.VehicleOverlayEditor.OnTry(ui, visible)
+	if getDebug() and visible then
+		rLib.UI.VehicleOverlayEditor.Enable(ui)
+		rLib.Events.Off("Vehicle.MechanicsSetVisible", rLib.UI.VehicleOverlayEditor.OnTry)
 	end
 end
 
-local ISVM_render = ISVehicleMechanics.render
-function ISVehicleMechanics:render()
-	ISVM_render(self)
-
-	if self.rLib and self.rLib.VehicleOverlayEditor then
-		self.rLib.VehicleOverlayEditor:postrender(self, self.drawRect)
-	end
-end
-
-function rLib.UI.VehicleOverlayEditor:close()
-	ISCollapsableWindow.close(self)
-	self.MechanicsUI.rLib.VehicleOverlayEditor = nil
-	self:removeFromUIManager()
-end
-
-function rLib.UI.VehicleOverlayEditor:GetVehicle()
-	return self.MechanicsUI.vehicle
-end
-
-function rLib.UI.VehicleOverlayEditor:IsCarListOK()
-	local vehicle = self:GetVehicle():getScript():getFullName()
-
-	return ISCarMechanicsOverlay.CarList[vehicle] ~= nil
-end
-
-function rLib.UI.VehicleOverlayEditor:GetCarListData(name)
-	assert(rLib.arg(name, "string"))
-
-	local vehicle = self:GetVehicle():getScript():getFullName()
-
-	if ISCarMechanicsOverlay.CarList[vehicle] and ISCarMechanicsOverlay.CarList[vehicle][name] then
-		return ISCarMechanicsOverlay.CarList[vehicle][name]
-	end
-
-	return nil
-end
-
-function rLib.UI.VehicleOverlayEditor:SetCarListData(name, data)
-	assert(rLib.arg(name, "string"))
-
-	local vehicle = self:GetVehicle():getScript():getFullName()
-
-	ISCarMechanicsOverlay.CarList[vehicle] =
-	ISCarMechanicsOverlay.CarList[vehicle] or {}
-
-	ISCarMechanicsOverlay.CarList[vehicle][name] = data
-end
-
-function rLib.UI.VehicleOverlayEditor:IsPartListOK(part)
-	assert(rLib.arg(part, "VehiclePart"))
-
-	part = part:getId()
-	local prefix = self:GetCarListData("imgPrefix")
-	if not prefix then
-		return nil
-	end
-
-	return ISCarMechanicsOverlay.PartList[part] ~= nil and ISCarMechanicsOverlay.PartList[part].vehicles ~= nil and ISCarMechanicsOverlay.PartList[part].vehicles[prefix] ~= nil
-end
-
-function rLib.UI.VehicleOverlayEditor:GetPartListData(part, name)
-	assert(rLib.arg(part, "VehiclePart"))
-	assert(rLib.arg(name, "string"))
-
-	part = part:getId()
-	local prefix = self:GetCarListData("imgPrefix")
-	if not prefix then
-		return nil
-	end
-
-	if name == "img" then
-		local vehicle = self:GetVehicle():getScript():getFullName()
-
-		if ISCarMechanicsOverlay.CarList[vehicle] and ISCarMechanicsOverlay.CarList[vehicle].PartList and ISCarMechanicsOverlay.CarList[vehicle].PartList[part] and ISCarMechanicsOverlay.CarList[vehicle].PartList[part][name] then
-			return ISCarMechanicsOverlay.CarList[vehicle].PartList[part][name]
-		end
-	else
-		if ISCarMechanicsOverlay.PartList[part] and ISCarMechanicsOverlay.PartList[part].vehicles and ISCarMechanicsOverlay.PartList[part].vehicles[prefix] and ISCarMechanicsOverlay.PartList[part].vehicles[prefix][name] then
-			return ISCarMechanicsOverlay.PartList[part].vehicles[prefix][name]
-		end
-	end
-
-	return nil
-end
-
-function rLib.UI.VehicleOverlayEditor:SetPartListData(part, name, data)
-	assert(rLib.arg(part, "VehiclePart"))
-	assert(rLib.arg(name, "string"))
-
-	part = part:getId()
-
-	if name == "img" then
-		local vehicle = self:GetVehicle():getScript():getFullName()
-
-		ISCarMechanicsOverlay.CarList[vehicle].PartList =
-		ISCarMechanicsOverlay.CarList[vehicle].PartList or {}
-
-		ISCarMechanicsOverlay.CarList[vehicle].PartList[part] =
-		ISCarMechanicsOverlay.CarList[vehicle].PartList[part] or {}
-
-		ISCarMechanicsOverlay.CarList[vehicle].PartList[part].img = data
-
-		local carListDebug = ISCarMechanicsOverlay.CarList[vehicle]
-		if data == nil then
-			if #ISCarMechanicsOverlay.CarList[vehicle].PartList[part] == 0 then
-				ISCarMechanicsOverlay.CarList[vehicle].PartList[part] = nil
-			end
-
-			if #ISCarMechanicsOverlay.CarList[vehicle].PartList == 0 then
-				ISCarMechanicsOverlay.CarList[vehicle].PartList = nil
-			end
-		end
-		rLib.breakpoint()
-		rLib.nop()
-	else
-		local prefix = self:GetCarListData("imgPrefix")
-
-		ISCarMechanicsOverlay.PartList[part] =
-		ISCarMechanicsOverlay.PartList[part] or {}
-
-		ISCarMechanicsOverlay.PartList[part].vehicles =
-		ISCarMechanicsOverlay.PartList[part].vehicles or {}
-
-		ISCarMechanicsOverlay.PartList[part].vehicles[prefix] =
-		ISCarMechanicsOverlay.PartList[part].vehicles[prefix] or {}
-
-		if data then
-			for _,var in ipairs({"x", "y", "x2", "y2"}) do
-				ISCarMechanicsOverlay.PartList[part].vehicles[prefix][var] =
-				ISCarMechanicsOverlay.PartList[part].vehicles[prefix][var] or 0
-			end
-		else
-				ISCarMechanicsOverlay.PartList[part].vehicles[prefix][var] = nil
-		end
-
-		ISCarMechanicsOverlay.PartList[part].vehicles[prefix][name] = data
-
-		if not data and table.isempty(ISCarMechanicsOverlay.PartList[part].vehicles[prefix]) then
-			ISCarMechanicsOverlay.PartList[part].vehicles[prefix] = nil
-		end
-	end
-end
-
-function rLib.UI.VehicleOverlayEditor:OnSelectedPartChange(part)
-	assert(rLib.arg(part, "VehiclePart", "nil"))
-
-	local valid = part ~= nil
-
-	if valid then
-		for _,ui in ipairs({ self.uiPartX1, self.uiPartY1, self.uiPartX2, self.uiPartY2 }) do
-			local partVal = ""
-			ui.Val = nil
-			ui.Val = self:GetPartListData(part, ui.Var)
-			partVal = tostring(ui.Val)
-			if ui.Val == nil then
-				valid = false
-			end
-			ui:setText(partVal)
-			ui:setEditable(true)
-		end
-		self.uiPartTexture:setText(self:GetPartListData(part, "img") or "")
-	end
-
-	for _,ui in ipairs({ self.uiPartDel, self.uiPartX1, self.uiPartY1, self.uiPartX2, self.uiPartY2, self.uiPartTexture}) do
-		ui:setVisible(part ~= nil and valid)
-	end
-	for _,ui in ipairs({ self.uiPartAdd }) do
-		ui:setVisible(part ~= nil and not valid)
-	end
-end
-
---
-
-function rLib.UI.VehicleOverlayEditor:GetPrefixTextureName(name)
-	name = "media/ui/vehicles/mechanic overlay/" .. name .. "base.png"
-	if not getTexture(name) then
-		return name, false
-	end
-
-	return name, true
-end
-
-function rLib.UI.VehicleOverlayEditor:OnCarPrefix()
-	local name, valid = self:getParent():GetPrefixTextureName(self:getText())
-
-	self:setValid(valid)
-	if not valid then
-		rLib.dprint("Invalid texture : %s", name)
+function rLib.UI.VehicleOverlayEditor.Try() -- called from console --
+	local player = getPlayer()
+	if not player then
 		return
 	end
 
-	self:getParent():SetCarListData("imgPrefix", self:getText())
-end
-
-function rLib.UI.VehicleOverlayEditor:OnCarXY()
-	self:getParent():SetCarListData(self.Var, tonumber(self:getText()))
-end
-
-function rLib.UI.VehicleOverlayEditor:OnPartAdd(button)
-	if not self.SelectedPart then
+	local vehicle = player:getVehicle() or player:getNearVehicle()
+	if not vehicle then
 		return
 	end
 
-	for _,name in ipairs({ "x", "y", "x2", "y2" }) do
-		self:SetPartListData(self.SelectedPart, name, 0)
-	end
-	self:OnSelectedPartChange(self.SelectedPart)
-end
-
-function rLib.UI.VehicleOverlayEditor:OnPartDel(button)
-	if not self.SelectedPart then
-		return
+	local ui = getPlayerMechanicsUI(player:getPlayerNum())
+	if ui:isReallyVisible() then
+		ui:close()
 	end
 
-	for _,name in ipairs({ "x", "y", "x2", "y2" }) do
-		self:SetPartListData(self.SelectedPart, name, nil)
-	end
-	self:OnSelectedPartChange(self.SelectedPart)
-end
-
-function rLib.UI.VehicleOverlayEditor:OnPartXY()
-	local selectedPart = self:getParent().SelectedPart
-
-	if not selectedPart then
-		return
-	end
-
-	self.Val = tonumber(self:getText())
-	self:getParent():SetPartListData(selectedPart, self.Var, self.Val)
-end
-
-function rLib.UI.VehicleOverlayEditor:OnPartTexture()
-	local selectedPart = self:getParent().SelectedPart
-
-	if not selectedPart then
-		return
-	end
-
-	local data = self:getText()
-	if data == "" then
-		data = nil
-	end
-
-	self:getParent():SetPartListData(selectedPart, "img", data)
+	rLib.Events.On("Vehicle.MechanicsSetVisible", rLib.UI.VehicleOverlayEditor.OnTry)
+	ISVehicleMenu.onMechanic(player, vehicle)
 end
 
 ---
 
-ISVehicleMechanics.rLib = ISVehicleMechanics.rLib or {}
-function ISVehicleMechanics.rLib:VehicleOverlayEditorButtonClick(button)
-	if self.rLib.VehicleOverlayEditor then
-		return
-	end
-
-	local editor = rLib.UI.VehicleOverlayEditor:new(self)
-	editor:initialise()
-	editor:instantiate()
-	editor:addToUIManager()
-
-	self.rLib.VehicleOverlayEditor = editor
-end
-
 local function OnMechanicsSetVisible(ui, visible)
-	if not ui.rLib or not ui.rLib.VehicleOverlayEditorButton then
+	if not ui.rLib or not ui.rLib.VehicleOverlayEditor then
 		local x, h
 		if ui.infoButton then
 			x = ui.infoButton:getRight()
@@ -515,22 +913,30 @@ local function OnMechanicsSetVisible(ui, visible)
 			local text = getText("UI_rLib_VehicleOverlayEditor")
 			local textWidth = getTextManager():MeasureStringX(UIFont.Small, text)
 
-			ui.rLib.VehicleOverlayEditorButton = ISButton:new(x, 0, textWidth, h, text, ui, ui.rLib.VehicleOverlayEditorButtonClick)
+			ui.rLib = ui.rLib or {}
+
+			ui.rLib.VehicleOverlayEditor = rLib.UI.VehicleOverlayEditor:new(ui)
+			ui.rLib.VehicleOverlayEditor:initialise()
+			ui.rLib.VehicleOverlayEditor:instantiate()
+			ui:addChild(ui.rLib.VehicleOverlayEditor)
+
+			ui.rLib.VehicleOverlayEditorButton = ISButton:new(x, 0, textWidth, h, text, ui.rLib.VehicleOverlayEditor, ui.rLib.VehicleOverlayEditor.Show)
 			ui.rLib.VehicleOverlayEditorButton:initialise()
 			ui.rLib.VehicleOverlayEditorButton.borderColor.a = 0.0
-			ui.rLib.VehicleOverlayEditorButton.backgroundColor.a = 0.0
+			ui.rLib.VehicleOverlayEditorButton.backgroundColor.a = 0.1
 			ui.rLib.VehicleOverlayEditorButton.backgroundColorMouseOver.a = 0.7
 			ui:addChild(ui.rLib.VehicleOverlayEditorButton)
 		end
 	end
 
+	ui.rLib.VehicleOverlayEditor:Show(false)
 	ui.rLib.VehicleOverlayEditorButton:setVisible(false)
+end
 
-	if ui.rLib.VehicleOverlayEditor then
-		ui.rLib.VehicleOverlayEditor:close()
-	end
-
-	UIManager.update()
+function rLib.ISCAR()
+	local overlay = ISCarMechanicsOverlay
+	rLib.breakpoint()
+	rLib.nop()
 end
 
 rLib.Events.On("Vehicle.MechanicsSetVisible", OnMechanicsSetVisible)

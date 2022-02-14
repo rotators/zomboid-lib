@@ -1,8 +1,16 @@
 rLib_EN =
 {
 	UI_rLib_VehicleOverlayEditor = "Overlay Editor",
-	UI_rLib_VehicleOverlayEditor_CarAdd = "Add car config"
-	UI_rLib_VehicleOverlayEditor_CarDel = "Remove car config"
-	UI_rLib_VehicleOverlayEditor_PartAdd = "Add part config"
-	UI_rLib_VehicleOverlayEditor_PartDel = "Remove part config"
+	UI_rLib_VehicleOverlayEditor_default = "default",
+	UI_rLib_VehicleOverlayEditor_custom = "custom",
+	UI_rLib_VehicleOverlayEditor_VehicleAdd = "Add vehicle configuration",
+	UI_rLib_VehicleOverlayEditor_VehicleDel = "Remove",
+	UI_rLib_VehicleOverlayEditor_VehiclePrefixNew = "Enter vehicle textures prefix\n\nBase texture filename:\nmedia/ui/vehicles/mechanic overlay/[PREFIX]base.png\n",
+	UI_rLib_VehicleOverlayEditor_PartTextureAdd = "Add texture configuration",
+	UI_rLib_VehicleOverlayEditor_PartTextureDel = "Remove",
+	UI_rLib_VehicleOverlayEditor_PartSpotAdd = "Add hotspot configuration",
+	UI_rLib_VehicleOverlayEditor_PartSpotDel = "Remove",
+	UI_rLib_VehicleOverlayEditor_Generate = "Copy to clipboard",
+	UI_rLib_VehicleOverlayEditor_ErrorTextureNameEmpty = "Texture filename cannot be empty",
+	UI_rLib_VehicleOverlayEditor_ErrorTextureNameInvalid = "Texture does not exists or cannot be loaded"
 }

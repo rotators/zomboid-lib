@@ -1,6 +1,13 @@
 require "rLib.SidePanel"
 
-rLib.UI = {}
+rLib.UI =
+{
+	FontSize =
+	{
+		Small = getTextManager():getFontHeight(UIFont.Small),
+		Medium = getTextManager():getFontHeight(UIFont.Medium)
+	}
+}
 
 function rLib.UI.UpdateAndCall(func, ...)
 	-- allows to call functions which check radial menu visibility (such as ISVehicleMenu.showRadialMenu()) directly from radial:addSlice(...) --
