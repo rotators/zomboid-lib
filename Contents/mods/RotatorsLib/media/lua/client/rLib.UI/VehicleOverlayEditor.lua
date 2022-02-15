@@ -993,10 +993,4 @@ local function OnMechanicsSetVisible(ui, visible)
 	ui.rLib.VehicleOverlayEditorButton:setVisible(false)
 end
 
-function rLib.ISCAR()
-	local overlay = ISCarMechanicsOverlay
-	rLib.breakpoint()
-	rLib.nop()
-end
-
 rLib.Events.On("Vehicle.MechanicsSetVisible", OnMechanicsSetVisible)
