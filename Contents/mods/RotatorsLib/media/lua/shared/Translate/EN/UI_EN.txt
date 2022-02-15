@@ -11,6 +11,7 @@ rLib_EN =
 	UI_rLib_VehicleOverlayEditor_PartSpotAdd = "Add hotspot configuration",
 	UI_rLib_VehicleOverlayEditor_PartSpotDel = "Remove",
 	UI_rLib_VehicleOverlayEditor_Generate = "Copy to clipboard",
-	UI_rLib_VehicleOverlayEditor_ErrorTextureNameEmpty = "Texture filename cannot be empty",
-	UI_rLib_VehicleOverlayEditor_ErrorTextureNameInvalid = "Texture does not exists or cannot be loaded"
+	UI_rLib_VehicleOverlayEditor_WarningPrefixInUse = "WARNING: Textures prefix '%1' already in use\n\n%2",
+	UI_rLib_VehicleOverlayEditor_ErrorTextureNameEmpty = "ERROR: Texture filename cannot be empty",
+	UI_rLib_VehicleOverlayEditor_ErrorTextureNameInvalid = "ERROR: Texture does not exists or cannot be loaded\n\n%1"
 }

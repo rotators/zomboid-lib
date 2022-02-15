@@ -22,6 +22,7 @@ function rLib.UI.VehicleOverlayEditor:new(mechanicsUI)
 	self.__index = self
 
 	this.MechanicsUI = mechanicsUI
+	this.FailsafeCustomPartImg = "<<<VehicleOverlayEditor-CustomPart-ErrorPrevention>>>" -- see SetPartListData() --
 
 	return this
 end
@@ -83,7 +84,7 @@ function rLib.UI.VehicleOverlayEditor:createChildren()
 	self.uiPartTextureInfo:initialise()
 	self.uiPartTextureInfo:instantiate()
 	self.uiPartTextureInfo.center = true
-	self.uiPartTextureInfo:setWidth(self.uiVehicleY:getRight() - self.uiVehicleX:getX())
+	--self.uiPartTextureInfo:setWidth(self.uiVehicleY:getRight() - self.uiVehicleX:getX())
 	self.uiPartTextureInfo:setX(self.uiVehicleX:getX() + (self.uiVehicleY:getRight() - self.uiVehicleX:getX()) / 2)
 	self:AddElement(self.uiPartTextureInfo)
 
@@ -144,7 +145,7 @@ function rLib.UI.VehicleOverlayEditor:createChildren()
 	self.uiPartSpotInfo:instantiate()
 	self.uiPartSpotInfo.center = true
 	self.uiPartSpotInfo:setX(self.uiPartTextureInfo:getX())
-	self.uiPartSpotInfo:setWidth(self.uiPartTextureInfo:getWidth())
+	--self.uiPartSpotInfo:setWidth(self.uiPartTextureInfo:getWidth())
 	self:AddElement(self.uiPartSpotInfo)
 
 	local wDisplay = getTextManager():MeasureStringX(UIFont.Small, "ISCarMechanicsOverlay") + pad * 2
@@ -179,17 +180,21 @@ function rLib.UI.VehicleOverlayEditor:postrender(target, func)
 end
 
 function rLib.UI.VehicleOverlayEditor:renderMechanics()
+	-- self = ISVehicleMechanics --
+
 	ISCollapsableWindow.render(self)
 	if self.isCollapsed then return end
 
 	self:checkEngineFull()
 	self:renderCarOverlay()
+	self.rLib.VehicleOverlayEditor:postrender(self, self.drawRect)
 
 	local title = self.vehicle:getScript():getFullName()
 	if self.rLib.VehicleOverlayEditor.SelectedPart then
 		title = title .. " (" .. self.rLib.VehicleOverlayEditor.SelectedPart:getId() .. ")"
 	end
 
+	-- TODO convert to editor's label --
 	self:drawTextCentre(title, self.xCarTexOffset + 5 + (self.rLib.VehicleOverlayEditor:getWidth() / 2), self:titleBarHeight() + 10 + 5, self.partCatRGB.r, self.partCatRGB.g, self.partCatRGB.b, self.partCatRGB.a, UIFont.Medium)
 
 	if self.drawJoypadFocus and self.leftListHasFocus then
@@ -253,14 +258,27 @@ function rLib.UI.VehicleOverlayEditor:Show(show)
 	self:setVisible(show)
 end
 
+function rLib.UI.VehicleOverlayEditor:ShowMsg(text)
+	if self.ModalMsg then
+		self.ModalMsg:destroy()
+		self.ModalMsg = nil
+	end
+
+	self.ModalMsg = ISModalDialog:new(0, 0, 0, 0, text, false)
+	self.ModalMsg:initialise()
+	self.ModalMsg:setX((getCore():getScreenWidth() / 2) - (self.ModalMsg:getWidth() / 2))
+	self.ModalMsg:setY(getCore():getScreenHeight() / 3)
+	self.ModalMsg:addToUIManager()
+end
+
 function rLib.UI.VehicleOverlayEditor:DestroyModals()
 	if self.Modal then
 		self.Modal:destroy()
 		self.Modal = nil
 	end
-	if self.ModalError then
-		self.ModalError:destroy()
-		self.ModalError = nil
+	if self.ModalMsg then
+		self.ModalMsg:destroy()
+		self.ModalMsg = nil
 	end
 end
 
@@ -318,18 +336,18 @@ function rLib.UI.VehicleOverlayEditor:UpdateSelectedPart()
 end
 
 function rLib.UI.VehicleOverlayEditor:IsCarListOK()
-	local vehicle = self:GetVehicleFullName()
+	local vehicleName = self:GetVehicleFullName()
 
-	return ISCarMechanicsOverlay.CarList[vehicle] ~= nil
+	return ISCarMechanicsOverlay.CarList[vehicleName] ~= nil
 end
 
 function rLib.UI.VehicleOverlayEditor:GetCarListData(name)
 	assert(rLib.arg(name, "string"))
 
-	local vehicle = self:GetVehicleFullName()
+	local vehicleName = self:GetVehicleFullName()
 
-	if ISCarMechanicsOverlay.CarList[vehicle] and ISCarMechanicsOverlay.CarList[vehicle][name] then
-		return ISCarMechanicsOverlay.CarList[vehicle][name]
+	if ISCarMechanicsOverlay.CarList[vehicleName] and ISCarMechanicsOverlay.CarList[vehicleName][name] then
+		return ISCarMechanicsOverlay.CarList[vehicleName][name]
 	end
 
 	return nil
@@ -338,15 +356,15 @@ end
 function rLib.UI.VehicleOverlayEditor:SetCarListData(name, data)
 	assert(rLib.arg(name, "string"))
 
-	local vehicle = self:GetVehicleFullName()
+	local vehicleName = self:GetVehicleFullName()
 
-	ISCarMechanicsOverlay.CarList[vehicle] =
-	ISCarMechanicsOverlay.CarList[vehicle] or {}
+	ISCarMechanicsOverlay.CarList[vehicleName] =
+	ISCarMechanicsOverlay.CarList[vehicleName] or {}
 
-	ISCarMechanicsOverlay.CarList[vehicle][name] = data
+	ISCarMechanicsOverlay.CarList[vehicleName][name] = data
 
-	if data == nil and table.isempty(ISCarMechanicsOverlay.CarList[vehicle]) then
-		ISCarMechanicsOverlay.CarList[vehicle] = nil
+	if data == nil and table.isempty(ISCarMechanicsOverlay.CarList[vehicleName]) then
+		ISCarMechanicsOverlay.CarList[vehicleName] = nil
 	end
 end
 
@@ -374,10 +392,10 @@ function rLib.UI.VehicleOverlayEditor:GetPartListData(part, name, vanillaFallbac
 	local partId = part:getId()
 
 	if name == "img" then
-		local vehicle = self:GetVehicleFullName()
+		local vehicleName = self:GetVehicleFullName()
 
-		if ISCarMechanicsOverlay.CarList[vehicle] and ISCarMechanicsOverlay.CarList[vehicle].PartList and ISCarMechanicsOverlay.CarList[vehicle].PartList[partId] and ISCarMechanicsOverlay.CarList[vehicle].PartList[partId][name] then
-			return ISCarMechanicsOverlay.CarList[vehicle].PartList[partId][name], "vehicle"
+		if ISCarMechanicsOverlay.CarList[vehicleName] and ISCarMechanicsOverlay.CarList[vehicleName].PartList and ISCarMechanicsOverlay.CarList[vehicleName].PartList[partId] and ISCarMechanicsOverlay.CarList[vehicleName].PartList[partId][name] then
+			return ISCarMechanicsOverlay.CarList[vehicleName].PartList[partId][name], "vehicle"
 		end
 	else
 		if ISCarMechanicsOverlay.PartList[partId] and ISCarMechanicsOverlay.PartList[partId].vehicles and ISCarMechanicsOverlay.PartList[partId].vehicles[prefix] and ISCarMechanicsOverlay.PartList[partId].vehicles[prefix][name] then
@@ -411,27 +429,43 @@ function rLib.UI.VehicleOverlayEditor:SetPartListData(part, name, data)
 	assert(rLib.arg(name, "string"))
 
 	local partId = part:getId()
+	local vehicleName = self:GetVehicleFullName()
+	local dbgCarList = ISCarMechanicsOverlay.CarList[vehicleName]
+	local dbgPartList = ISCarMechanicsOverlay.PartList[partId]
 
 	if name == "img" then
-		local vehicle = self:GetVehicleFullName()
+		ISCarMechanicsOverlay.CarList[vehicleName].PartList =
+		ISCarMechanicsOverlay.CarList[vehicleName].PartList or {}
 
-		ISCarMechanicsOverlay.CarList[vehicle].PartList =
-		ISCarMechanicsOverlay.CarList[vehicle].PartList or {}
+		ISCarMechanicsOverlay.CarList[vehicleName].PartList[partId] =
+		ISCarMechanicsOverlay.CarList[vehicleName].PartList[partId] or {}
 
-		ISCarMechanicsOverlay.CarList[vehicle].PartList[partId] =
-		ISCarMechanicsOverlay.CarList[vehicle].PartList[partId] or {}
-
-		ISCarMechanicsOverlay.CarList[vehicle].PartList[partId].img = data
-
-		local carListDebug = ISCarMechanicsOverlay.CarList[vehicle]
+		ISCarMechanicsOverlay.CarList[vehicleName].PartList[partId][name] = data
 
 		if data == nil then
-			if table.isempty(ISCarMechanicsOverlay.CarList[vehicle].PartList[partId]) then
-				ISCarMechanicsOverlay.CarList[vehicle].PartList[partId] = nil
+			if table.isempty(ISCarMechanicsOverlay.CarList[vehicleName].PartList[partId]) then
+				ISCarMechanicsOverlay.CarList[vehicleName].PartList[partId] = nil
 			end
 
-			if table.isempty(ISCarMechanicsOverlay.CarList[vehicle].PartList) then
-				ISCarMechanicsOverlay.CarList[vehicle].PartList = nil
+			if table.isempty(ISCarMechanicsOverlay.CarList[vehicleName].PartList) then
+				ISCarMechanicsOverlay.CarList[vehicleName].PartList = nil
+			end
+
+			-- install failsafe to prevents errors when vanilla script renders custom part without PartList entry --
+			if not ISCarMechanicsOverlay.PartList[partId] or ISCarMechanicsOverlay.PartList[partId].img == nil then
+				ISCarMechanicsOverlay.PartList[partId] =
+				ISCarMechanicsOverlay.PartList[partId] or {}
+
+				ISCarMechanicsOverlay.PartList[partId].img = self.FailsafeCustomPartImg
+			end
+		else
+			-- remove failsafe as it's no longer needed when part have texture set --
+			if ISCarMechanicsOverlay.PartList[partId] and ISCarMechanicsOverlay.PartList[partId].img == self.FailsafeCustomPartImg then
+				ISCarMechanicsOverlay.PartList[partId].img = nil
+
+				if table.isempty(ISCarMechanicsOverlay.PartList[partId]) then
+					ISCarMechanicsOverlay.PartList[partId] = nil
+				end
 			end
 		end
 	else
@@ -493,7 +527,8 @@ function rLib.UI.VehicleOverlayEditor:OnChangeVehicle(vehicle)
 	local valid = prefix ~= nil and x ~= nil and y ~= nil
 
 	if valid then
-		self.uiVehiclePrefix:setText(tostring(prefix))
+		self.uiVehiclePrefix:setText(prefix)
+		self.uiVehiclePrefix.Previous = prefix
 		self.uiVehicleX:setText(tostring(x))
 		self.uiVehicleY:setText(tostring(y))
 	end
@@ -519,6 +554,9 @@ function rLib.UI.VehicleOverlayEditor:OnChangeSelectedPart(part)
 	elseif part and prefix then
 		local textureSource
 		texture, textureSource = self:GetPartListData(part, "img", true)
+		if textureSource == "vanilla" and texture == self.FailsafeCustomPartImg then -- see SetPartListData() --
+			texture, textureSource = nil, nil
+		end
 		if texture ~= nil and textureSource ~= nil then
 			self.uiPartTexture:setText(texture)
 			self.uiPartTexture.Previous = texture
@@ -575,18 +613,37 @@ end
 
 function rLib.UI.VehicleOverlayEditor:OnVehiclePrefix()
 	local name, valid = self:getParent():GetPrefixTextureName(self:getText())
+	local vehicle = self:getParent():GetVehicle()
 
-	self:setValid(valid)
+	if not vehicle then
+		return
+	end
+
+	if self:getText() == "" then
+		self:getParent():ShowMsg(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameEmpty"))
+		self:setText(self.Previous)
+		return
+	end
+
 	if not valid then
-		rLib.dprint("Invalid texture : %s", name)
+		self:getParent():ShowMsg(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameInvalid", name))
+		self:setText(self.Previous)
 		return
 	end
 
 	self:getParent():SetCarListData("imgPrefix", self:getText())
+	self:getParent():OnChangeVehicle(vehicle)
 end
 
 function rLib.UI.VehicleOverlayEditor:OnVehicleXY()
+	local vehicle = self:getParent():GetVehicle()
+
+	if not vehicle then
+		return
+	end
+
 	self:getParent():SetCarListData(self.Var, tonumber(self:getText()))
+	self:getParent():OnChangeVehicle(vehicle)
 end
 
 function rLib.UI.VehicleOverlayEditor:OnVehicleAdd()
@@ -606,6 +663,8 @@ function rLib.UI.VehicleOverlayEditor:OnVehicleAdd()
 	self.Modal:addChild(self.Modal.uiVehiclePrefixNew)
 
 	self.Modal.yes:setEnable(false)
+	self.Modal.yes:setTitle(getText("UI_btn_accept"))
+	self.Modal.no:setTitle(getText("UI_btn_cancel"))
 	self.Modal:setHeight(self.Modal.uiVehiclePrefixNew:getBottom() + pad + self.Modal.yes:getHeight() + pad)
 
 	self.Modal.Editor = self
@@ -625,28 +684,25 @@ function rLib.UI.VehicleOverlayEditor:OnVehicleAddCheck(button) -- handles text 
 			editor:SetCarListData("imgPrefix", button:getParent().uiVehiclePrefixNew:getText())
 			editor:SetCarListData("x", 0)
 			editor:SetCarListData("y", 0)
-			editor:DestroyModals()
 			editor:OnChangeVehicle(vehicle)
+			editor:DestroyModals()
 		end
 		return
 	end
 
-	function modalError(text)
-		self:getParent().Editor.ModalError = ISModalDialog:new(0, 0, 0, 0, text, false)
-		self:getParent().Editor.ModalError:initialise()
-		self:getParent().Editor.ModalError:setX((getCore():getScreenWidth() / 2) - (self:getParent().Editor.ModalError:getWidth() / 2))
-		self:getParent().Editor.ModalError:setY(getCore():getScreenHeight() / 3)
-		self:getParent().Editor.ModalError:addToUIManager()
-	end
-
+	local editor = self:getParent().Editor
 	if self:getText() == "" then
-		return modalError(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameEmpty"))
+		self:getParent().yes:setEnable(false)
+		return editor:ShowMsg(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameEmpty"))
 	end
 
 	local name, valid = self:getParent().Editor:GetPrefixTextureName(self:getText())
 	if not valid then
-		return modalError(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameInvalid") .. "\n\n" .. name)
+		self:getParent().yes:setEnable(false)
+		return editor:ShowMsg(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameInvalid", name))
 	end
+
+	-- TODO UI_rLib_VehicleOverlayEditor_WarningPrefixInUse --
 
 	self:getParent().yes:setEnable(true)
 end
@@ -722,6 +778,10 @@ function rLib.UI.VehicleOverlayEditor:OnPartTextureAdd(button)
 
 	self:SetPartListData(self.SelectedPart, "img", "base")
 	self:OnChangeSelectedPart(self.SelectedPart)
+
+	if ISCarMechanicsOverlay.PartList[self.SelectedPart:getId()] == nil then
+		self:OnPartSpotAdd(button)
+	end
 end
 
 function rLib.UI.VehicleOverlayEditor:OnPartTextureDel(button)
