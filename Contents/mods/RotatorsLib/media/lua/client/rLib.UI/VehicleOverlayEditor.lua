@@ -740,20 +740,16 @@ function rLib.UI.VehicleOverlayEditor:OnPartTexture(ui)
 
 	local img = self:GetVanillaPartListData(self.SelectedPart, "img")
 
-	if not data and not img then
-		rLib.dprint("[rLib.UI.VehicleOverlayEditor.OnPartTexture] WARNING : Default texture for part '%s' does not exists", self.SelectedPart:getId())
+	if not data then
+		self:ShowMsg(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameEmpty"))
 		ui:setText(ui.Previous)
 		return
-	end
-
-	if data then
+	else
 		local name, valid = self:GetPartTextureName(data)
 		if not valid then
-			rLib.dprint("[rLib.UI.VehicleOverlayEditor.OnPartTexture] WARNING : Invalid texture : %s", name)
+			self:ShowMsg(getText("UI_rLib_VehicleOverlayEditor_ErrorTextureNameInvalid", name))
 			ui:setText(ui.Previous)
 			return
-		else
-			rLib.dprint("??? %s", name)
 		end
 
 		ui.Previous = data
