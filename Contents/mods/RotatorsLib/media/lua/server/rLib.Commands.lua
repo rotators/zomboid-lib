@@ -27,6 +27,7 @@ function rLib.Commands.Server_SetVehicleBattery(player, args)
 	end
 
 	inv:setUsedDelta(args.battery)
+	vehicle:transmitPartUsedDelta(part)
 end
 
 function rLib.Commands.Server_SetVehicleHeadlights(player, args)
