@@ -36,6 +36,11 @@ function rLib.Vehicles.Functions.Create.DefaultWithItemTypeModel(vehicle, part)
 	rLib.Vehicles.Functions.ShowPartItemTypeModel(part)
 end
 
+function rLib.Vehicles.Functions.Create.RadioWithItemTypeModel(vehicle, part)
+	Vehicles.Create.Radio(vehicle, part)
+	rLib.Vehicles.Functions.ShowPartItemTypeModel(part)
+end
+
 function rLib.Vehicles.Functions.Init.DefaultWithItemTypeModel(vehicle, part)
 	-- there is no Vehicles.Init.Default(...) in vanilla scripts --
 	rLib.Vehicles.Functions.ShowPartItemTypeModel(part)
