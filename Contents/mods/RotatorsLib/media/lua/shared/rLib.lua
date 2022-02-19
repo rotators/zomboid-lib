@@ -105,7 +105,7 @@ function rLib.arg(obj, ...)
 	return false, "[rLib] Invalid argument : expected '" .. table.concat(varargs, "' or '") .. "'"
 end
 
-function rLib.g()
+function rLib.g(obj)
 	if getDebug() then
 		local zombie = zombie
 		local java = java
