@@ -1,3 +1,5 @@
+--[[*]]-- RotatorsLib --[[*]]--
+
 require "ISUI/ISEquippedItem"
 
 require "rLib.Shared"

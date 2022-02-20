@@ -1,3 +1,5 @@
+--[[*]]-- RotatorsLib --[[*]]--
+
 require "rLib"
 require "rLib.Events"
 require "rLib.Squares"

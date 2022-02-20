@@ -1,3 +1,5 @@
+--[[*]]-- RotatorsLib --[[*]]--
+
 require "rLib.Shared"
 
 require "rLib.Commands"

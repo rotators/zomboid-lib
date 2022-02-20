@@ -1,3 +1,5 @@
+--[[*]]-- RotatorsLib --[[*]]--
+
 require "DebugUIs/LuaDebugger"
 
 local Vanilla =

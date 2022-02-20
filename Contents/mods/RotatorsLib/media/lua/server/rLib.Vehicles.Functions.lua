@@ -1,3 +1,5 @@
+--[[*]]-- RotatorsLib --[[*]]--
+
 require "Vehicles/Vehicles"
 
 require "rLib.Shared"

@@ -1,3 +1,5 @@
+--[[*]]-- RotatorsLib --[[*]]--
+
 require "rLib.SidePanel"
 
 rLib.UI =

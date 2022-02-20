@@ -1,3 +1,5 @@
+--[[*]]-- RotatorsLib --[[*]]--
+
 require "ISBaseObject"
 
 rLib = ISBaseObject:derive("rLib")

@@ -1,3 +1,5 @@
+--[[*]]-- RotatorsLib --[[*]]--
+
 require "Vehicles/ISUI/ISVehicleMechanics"
 require "Vehicles/ISUI/ISVehicleMenu"
 require "Vehicles/TimedActions/ISAttachTrailerToVehicle"
