@@ -225,18 +225,6 @@ function rLib.UI.VehicleOverlayEditor:AddElement(element)
 	self:addChild(element)
 end
 
-function rLib.UI.VehicleOverlayEditor:ShowElements(show, enable, ...)
-	for _,element in ipairs({...}) do
-		if element.Type == "ISButton" then
-			element:setEnable(enable)
-		else
-			element:setEnabled(enable)
-		end
-
-		element:setVisible(show)
-	end
-end
-
 function rLib.UI.VehicleOverlayEditor:Show(show)
 	if show and type(show) ~= "boolean" then
 		show = nil -- required as ISButton pushes itself in front of args --
@@ -256,6 +244,18 @@ function rLib.UI.VehicleOverlayEditor:Show(show)
 	self:DestroyModals()
 	self:OnChangeVehicle(self:GetVehicle())
 	self:setVisible(show)
+end
+
+function rLib.UI.VehicleOverlayEditor:ShowElements(show, enable, ...)
+	for _,element in ipairs({...}) do
+		if element.Type == "ISButton" then
+			element:setEnable(enable)
+		else
+			element:setEnabled(enable)
+		end
+
+		element:setVisible(show)
+	end
 end
 
 function rLib.UI.VehicleOverlayEditor:ShowMsg(text)
@@ -579,6 +579,10 @@ function rLib.UI.VehicleOverlayEditor:OnChangeSelectedPart(part)
 	-- hotspot --
 
 	local spot = false
+
+	for _,ui in ipairs({ self.uiPartSpotX1, self.uiPartSpotY1, self.uiPartSpotX2, self.uiPartSpotY2 }) do
+		ui.Val = nil
+	end
 
 	if not part then
 		self:ShowElements(false, false, self.uiPartSpotAdd, self.uiPartSpotDel, self.uiPartSpotX1, self.uiPartSpotY1, self.uiPartSpotX2, self.uiPartSpotY2, self.uiPartSpotInfo)
