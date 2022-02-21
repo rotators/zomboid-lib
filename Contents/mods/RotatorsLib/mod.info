@@ -3,7 +3,7 @@ name=RotatorsLib DEV
 description=Rotators, rotate!
 authors=Wipe
 
-modversion=1.1
+modversion=1.2
 versionMin=41.65
 tags=Build 41,Framework
 

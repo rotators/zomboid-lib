@@ -94,6 +94,61 @@ function rLib.mod(name)
 	return ActiveMods.getById("currentGame"):isModActive(name)
 end
 
+function rLib.modinfo(name, info, multi)
+	assert(rLib.arg(name, "string"))
+	assert(rLib.arg(info, "string"))
+	assert(rLib.arg(multi, "boolean", "nil"))
+
+
+	if type(multi) == "nil" then
+		multi = false
+	end
+
+	local result = multi and {} or nil
+
+	if not rLib.mod(name) then
+		return result
+	end
+
+	local file = getModFileReader(name, "mod.info", false)
+	if file then
+		local line = ""
+		while line do
+			local sline = string.split(line, "=")
+
+			if #sline >= 2 then
+				if string.lower(sline[1]) == string.lower(info) then
+					local text = string.sub(line, string.find(line, "=") + 1)
+					if multi then
+						table.insert(result, text)
+					else
+						result = text
+						break
+					end
+				end
+			end
+
+			line = file:readLine()
+		end
+
+		file:close()
+	end
+
+	return result
+end
+
+function rLib.modversion(name)
+	assert(rLib.arg(name, "string"))
+
+	local result = nil
+	local text = rLib.modinfo(name, "modversion", false)
+	if text then
+		result = tonumber(text)
+	end
+
+	return result
+end
+
 -- debug --
 
 function rLib.arg(obj, ...)
