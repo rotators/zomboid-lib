@@ -27,7 +27,7 @@ local Vanilla =
 	}
 }
 
---[[ISAttachTrailerToVehicle.lua v41.65]] rLib.Events.Add("Vehicle.AttachVehicle")
+--[[ISAttachTrailerToVehicle.lua v41.66]] rLib.Events.Add("Vehicle.AttachVehicle")
 
 function ISAttachTrailerToVehicle:perform()
 	local emit = false
@@ -45,7 +45,7 @@ function ISAttachTrailerToVehicle:perform()
 	end
 end
 
---[[ISDetachTrailerFromVehicle.lua v41.65]] rLib.Events.Add("Vehicle.DetachVehicle")
+--[[ISDetachTrailerFromVehicle.lua v41.66]] rLib.Events.Add("Vehicle.DetachVehicle")
 
 function ISDetachTrailerFromVehicle:perform()
 	local vehicleB = self.vehicle:getVehicleTowing()
@@ -55,17 +55,18 @@ function ISDetachTrailerFromVehicle:perform()
 	rLib.Events.Run("Vehicle.DetachVehicle", self.character, self.vehicle, vehicleB)
 end
 
---[[ISVehicleMechanics.lua v41.65]] rLib.Events.Add("Vehicle.MechanicsSetVisible")
+--[[ISVehicleMechanics.lua v41.66]] rLib.Events.Add("Vehicle.MechanicsSetVisible")
 
 function ISVehicleMechanics:setVisible(visible, ...)
 	Vanilla.ISVehicleMechanics.setVisible(self, visible, ...)
 
-	if instanceof(self.vehicle, "BaseVehicle") then -- skip during player data generation --
+	-- don't emit event during player data generation --
+	if instanceof(self.vehicle, "BaseVehicle") then
 		rLib.Events.Run("Vehicle.MechanicsSetVisible", self, visible)
 	end
 end
 
---[[ISVehicleMenu v41.65]] rLib.Events.Add("Vehicle.ToggleHeadlights")
+--[[ISVehicleMenu v41.66]] rLib.Events.Add("Vehicle.ToggleHeadlights")
 
 function ISVehicleMenu.onToggleHeadlights(player)
 	Vanilla.ISVehicleMenu.onToggleHeadlights(player)
