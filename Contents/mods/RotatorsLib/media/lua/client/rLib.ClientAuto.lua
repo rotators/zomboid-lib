@@ -20,6 +20,23 @@ local function gTableSafeGet(...)
 	return var
 end
 
+local function gTableSafeSet(...)
+	local path = {...}
+	assert(#path >= 3)
+
+	local tbl = _G
+	local val = table.remove(path)
+	local var = table.remove(path)
+
+	for _,t in ipairs(path) do
+		tbl[t] = tbl[t] or {}
+		tbl = tbl[t]
+	end
+	tbl[var] = val
+
+	return tbl
+end
+
 -- required for vehicles which are not using `Base` module --
 function rLib.ClientAuto.DebugReloadVehicleTextures(context, vehicle)
 	local option = rLib.ContextMenu.GetSubOption(context, "[DEBUG] Vehicle", "Reload Vehicle Textures")
