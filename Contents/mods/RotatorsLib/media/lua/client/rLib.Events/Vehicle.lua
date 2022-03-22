@@ -60,7 +60,7 @@ end
 function ISVehicleMechanics:setVisible(visible, ...)
 	Vanilla.ISVehicleMechanics.setVisible(self, visible, ...)
 
-	-- don't emit event during player data generation --
+	-- skip running event during player data generation --
 	if instanceof(self.vehicle, "BaseVehicle") then
 		rLib.Events.Run("Vehicle.MechanicsSetVisible", self, visible)
 	end
@@ -79,4 +79,29 @@ function ISVehicleMenu.onToggleHeadlights(player)
 	-- TODO server synch --
 
 	rLib.Events.Run("Vehicle.ToggleHeadlights", player, vehicle)
+end
+
+require "rLib.Shared"
+
+if rLib.mod("tsarslib") then
+	require "CommonTemplates/ISUI/ISCommonMenu"
+	if type(ISCommonMenu) == "table" then
+		local ISCM_onAttachTrailer = ISCommonMenu.onAttachTrailer
+		function ISCommonMenu.onAttachTrailer(player, vehicleA, vehicleB, ...)
+			ISCM_onAttachTrailer(player, vehicleA, vehicleB, ...)
+
+			if not vehicleB then
+				return
+			end
+
+			rLib.Events.Run("Vehicle.AttachVehicle", player, vehicleA, vehicleB)
+		end
+
+		local ISCM_onDetachTrailer = ISCommonMenu.onDetachTrailer
+		function ISCommonMenu.onDetachTrailer(player, vehicleA, ...)
+			ISCM_onDetachTrailer(player, vehicleA, ...)
+
+			rLib.Events.Run("Vehicle.DetachVehicle", player, vehicleA, vehicleA:getVehicleTowing())
+		end
+	end
 end

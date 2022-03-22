@@ -99,7 +99,6 @@ function rLib.modinfo(name, info, multi)
 	assert(rLib.arg(info, "string"))
 	assert(rLib.arg(multi, "boolean", "nil"))
 
-
 	if type(multi) == "nil" then
 		multi = false
 	end
@@ -112,26 +111,76 @@ function rLib.modinfo(name, info, multi)
 
 	local file = getModFileReader(name, "mod.info", false)
 	if file then
-		local line = ""
-		while line do
-			local sline = string.split(line, "=")
+		result = rLib.modinfoget(file, info, multi)
+		file:close()
+	end
 
-			if #sline >= 2 then
-				if string.lower(sline[1]) == string.lower(info) then
-					local text = string.sub(line, string.find(line, "=") + 1)
-					if multi then
-						table.insert(result, text)
-					else
-						result = text
-						break
-					end
+	return result
+end
+
+--[[ wip/unreliable
+function rLib.modinfoself(info, multi)
+	assert(rLib.arg(info, "string"))
+	assert(rLib.arg(multi, "boolean", "nil"))
+
+	local coro = getCurrentCoroutine()
+	local func = getCoroutineCallframeStack(coro, 1)
+	local file = getFilenameOfCallframe(func)
+	local path = string.split(file, "/")
+
+	if type(multi) == "nil" then
+		multi = false
+	end
+
+	local result = multi and {} or nil
+
+	local modinfo = nil
+	while #path > 0 do
+		table.remove(path)
+		local filename = table.concat(path, "/") .. "/mod.info"
+		if fileExists(filename) then
+			modinfo = filename
+			break
+		end
+	end
+
+	if modinfo then
+		file = getGameFilesInput(modinfo)
+		if file then
+			result = rLib.modinfoget(file, info, multi)
+			file:close()
+			endFileInput()
+		end
+	end
+
+	return result
+end
+]]--
+
+function rLib.modinfoget(file, info, multi)
+	assert(rLib.arg(file, "BufferedReader", "DataInputStream"))
+	assert(rLib.arg(info, "string"))
+	assert(rLib.arg(multi, "boolean"))
+
+	local result = multi and {} or nil
+
+	local line = ""
+	while line do
+		local sline = string.split(line, "=")
+
+		if #sline >= 2 then
+			if string.lower(sline[1]) == string.lower(info) then
+				local text = string.sub(line, string.find(line, "=") + 1)
+				if multi then
+					table.insert(result, text)
+				else
+					result = text
+					break
 				end
 			end
-
-			line = file:readLine()
 		end
 
-		file:close()
+		line = file:readLine()
 	end
 
 	return result
