@@ -7,6 +7,10 @@ require "Vehicles/TimedActions/ISDetachTrailerFromVehicle"
 
 require "rLib.Shared"
 
+if rLib.mod("tsarslib") then
+	require "CommonTemplates/ISUI/ISCommonMenu"
+end
+
 local Vanilla =
 {
 	ISAttachTrailerToVehicle =
@@ -26,6 +30,21 @@ local Vanilla =
 		onToggleHeadlights = ISVehicleMenu.onToggleHeadlights
 	}
 }
+
+local Mods =
+{
+	-- tsarlib --
+	ISCommonMenu =
+	{
+		onAttachTrailer = nil,
+		onDetachTrailer = nil
+	}
+}
+
+if type(ISCommonMenu) == "table"
+	Mods.ISCommonMenu.onAttachTrailer = ISCommonMenu.onAttachTrailer
+	Mods.ISCommonMenu.onDetachTrailer = ISCommonMenu.onDetachTrailer
+end
 
 --[[ISAttachTrailerToVehicle.lua v41.66]] rLib.Events.Add("Vehicle.AttachVehicle")
 
@@ -81,27 +100,20 @@ function ISVehicleMenu.onToggleHeadlights(player)
 	rLib.Events.Run("Vehicle.ToggleHeadlights", player, vehicle)
 end
 
-require "rLib.Shared"
+--
 
-if rLib.mod("tsarslib") then
-	require "CommonTemplates/ISUI/ISCommonMenu"
-	if type(ISCommonMenu) == "table" then
-		local ISCM_onAttachTrailer = ISCommonMenu.onAttachTrailer
-		function ISCommonMenu.onAttachTrailer(player, vehicleA, vehicleB, ...)
-			ISCM_onAttachTrailer(player, vehicleA, vehicleB, ...)
+function ISCommonMenu.onAttachTrailer(player, vehicleA, vehicleB, ...)
+	Mods.ISCommonMenu.onAttachTrailer(player, vehicleA, vehicleB, ...)
 
-			if not vehicleB then
-				return
-			end
-
-			rLib.Events.Run("Vehicle.AttachVehicle", player, vehicleA, vehicleB)
-		end
-
-		local ISCM_onDetachTrailer = ISCommonMenu.onDetachTrailer
-		function ISCommonMenu.onDetachTrailer(player, vehicleA, ...)
-			ISCM_onDetachTrailer(player, vehicleA, ...)
-
-			rLib.Events.Run("Vehicle.DetachVehicle", player, vehicleA, vehicleA:getVehicleTowing())
-		end
+	if not vehicleB then
+		return
 	end
+
+	rLib.Events.Run("Vehicle.AttachVehicle", player, vehicleA, vehicleB)
+end
+
+function ISCommonMenu.onDetachTrailer(player, vehicleA, ...)
+	ISCM_onDetachTrailer(player, vehicleA, ...)
+
+	rLib.Events.Run("Vehicle.DetachVehicle", player, vehicleA, vehicleA:getVehicleTowing())
 end
